@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080808">
+<meta name="description" content="PIXELCRYPT — hide text messages inside images with optional authenticated encryption. Files stay in your browser.">
+<title>PIXELCRYPT — Hide in plain sight</title>
+<style>
+  :root{
+    --red:#EB1000;--red60:#FF5A4F;--red80:#F53B2D;--black:#080808;--ink:#111111;
+    --white:#FFFFFF;--neutral:#F3F4F6;--border:#E5E7EB;--muted:#6B7280;
+    --success:#147D45;--warning:#8A4B00;--surface:#FFFFFF;--r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:24px;--pill:9999px;
+    --display:"Adobe Clean Display","Adobe Clean",Inter,Arial,Helvetica,sans-serif;
+    --body:"Adobe Clean",Inter,Arial,Helvetica,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:90px}
+  body{margin:0;background:var(--neutral);color:var(--ink);font-family:var(--body);font-size:16px;font-weight:700;line-height:1.5;letter-spacing:-.01em}
+  button,input,textarea,select{font:inherit}
+  button{cursor:pointer}
+  button:disabled{cursor:not-allowed;opacity:.48}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--red60);outline-offset:3px}
+  a{color:inherit}
+  .shell{width:min(1240px,calc(100% - 48px));margin-inline:auto}
+  .topbar{height:76px;background:var(--black);color:var(--white);display:flex;align-items:center;border-bottom:1px solid #222;position:sticky;top:0;z-index:20}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .brand{display:flex;align-items:center;gap:11px;text-decoration:none;font-weight:900;letter-spacing:-.045em;font-size:22px}
+  .brand-mark{width:34px;height:34px;display:grid;place-items:center;background:var(--red);border-radius:9px;flex:0 0 auto}
+  .brand small{display:block;color:#b7b7b7;font-size:10px;font-weight:700;letter-spacing:.12em;margin-top:-3px}
+  .nav{display:flex;align-items:center;gap:26px;color:#e8e8e8;font-size:13px;letter-spacing:0}
+  .nav a{text-decoration:none;opacity:.9}.nav a:hover{opacity:1;color:var(--red60)}
+  .nav-cta{border:0;border-radius:var(--pill);background:var(--white);color:var(--black);padding:10px 18px;font-size:13px;font-weight:800;transition:background .16s}
+  .nav-cta:hover{background:var(--neutral)}
+  .hero{background:var(--black);color:var(--white);overflow:hidden;position:relative;isolation:isolate}
+  .hero:before{content:"";position:absolute;inset:0 0 0 43%;z-index:-2;background:radial-gradient(ellipse at 58% 48%,#292929 0, #141414 32%,#080808 71%)}
+  .hero:after{content:"";position:absolute;right:-70px;top:36px;width:min(48vw,620px);height:min(48vw,620px);border-radius:50%;border:1px solid #303030;z-index:-1;box-shadow:0 0 0 38px #ffffff03,0 0 0 88px #ffffff02}
+  .hero-inner{min-height:560px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:28px;padding-block:72px 82px}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;border:1px solid #383838;border-radius:var(--pill);padding:7px 12px;color:#e6e6e6;font-size:11px;letter-spacing:.09em;font-weight:800;text-transform:uppercase}
+  .eyebrow-dot{height:7px;width:7px;background:#54bd75;box-shadow:0 0 0 4px #54bd7519;border-radius:50%}
+  h1,h2,h3,p{margin-top:0}
+  .hero h1{font-family:var(--display);font-size:clamp(54px,7vw,88px);font-weight:900;line-height:.97;letter-spacing:-.065em;margin:28px 0 22px;max-width:690px}
+  .hero h1 .red{color:var(--red)}
+  .hero-copy{max-width:570px;color:#c9c9c9;font-size:18px;font-weight:700;line-height:1.55;margin-bottom:30px}
+  .hero-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+  .btn{min-height:44px;padding:12px 22px;border:1px solid transparent;border-radius:var(--pill);display:inline-flex;justify-content:center;align-items:center;gap:9px;font-size:14px;font-weight:800;text-decoration:none;transition:background .16s,border-color .16s,transform .16s}
+  .btn:hover:not(:disabled){transform:translateY(-1px)}
+  .btn-white{background:var(--white);color:var(--black)}.btn-white:hover:not(:disabled){background:var(--neutral)}
+  .btn-outline{background:transparent;color:var(--white);border-color:#535353}.btn-outline:hover:not(:disabled){border-color:#fff}
+  .btn-red{background:var(--red);color:white}.btn-red:hover:not(:disabled){background:var(--red80)}
+  .btn-dark{background:var(--black);color:white}.btn-dark:hover:not(:disabled){background:#282828}
+  .btn-light{background:white;color:#111;border-color:var(--border)}.btn-light:hover:not(:disabled){background:var(--neutral)}
+  .btn-quiet{background:transparent;color:#222;border-color:transparent;padding-inline:12px}.btn-quiet:hover:not(:disabled){background:#f3f4f6}
+  .hero-visual{position:relative;min-height:365px;display:grid;place-items:center}
+  .hero-orbit{position:absolute;width:350px;height:350px;border:1px solid #4a4a4a;border-radius:50%;transform:rotate(-22deg)}
+  .hero-orbit:before,.hero-orbit:after{content:"";position:absolute;border:1px solid #363636;border-radius:50%;inset:29px}.hero-orbit:after{inset:67px}
+  .hero-art{width:min(100%,420px);position:relative;filter:drop-shadow(0 18px 24px #0008)}
+  .art-frame{padding:12px;background:#f9f9f9;border-radius:12px;transform:rotate(3deg);border:1px solid #555}
+  .art-top{height:19px;display:flex;gap:5px;align-items:flex-start;padding-left:2px}
+  .art-top span{width:6px;height:6px;border-radius:50%;background:#d2d2d2}
+  .art-scene{height:234px;position:relative;overflow:hidden;border-radius:4px;background:linear-gradient(145deg,#e7e7e7 0 27%,#a2a2a2 28% 29%,#3b3b3b 30% 49%,#111 50% 100%)}
+  .art-scene:before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 0 38%,#ffffff16 38% 39%,transparent 39% 60%,#ffffff0d 60% 61%,transparent 61%)}
+  .art-hill{position:absolute;left:-9%;right:-9%;bottom:-3px;height:62%;background:linear-gradient(145deg,#646464,#202020 60%,#090909);clip-path:polygon(0 65%,22% 10%,39% 60%,63% 0,100% 70%,100% 100%,0 100%)}
+  .art-sun{position:absolute;width:54px;height:54px;right:19%;top:20%;background:#f4f4f4;border-radius:50%}
+  .art-pixels{position:absolute;right:14px;bottom:15px;display:grid;grid-template-columns:repeat(7,8px);gap:4px;transform:rotate(-4deg)}
+  .art-pixels i{height:8px;width:8px;background:#f5f5f5;opacity:.8}.art-pixels i:nth-child(3n){background:var(--red)}.art-pixels i:nth-child(4n){opacity:.2}
+  .art-caption{display:flex;justify-content:space-between;gap:8px;padding:12px 2px 2px;color:#222;font-size:10px;letter-spacing:.04em}
+  .art-caption b{color:var(--red)}
+  .floating-chip{position:absolute;display:flex;align-items:center;gap:10px;background:white;color:#111;border:1px solid #dedede;padding:12px 14px;border-radius:9px;box-shadow:0 5px 20px #0003;font-size:12px}
+  .floating-chip svg{color:var(--red)}.floating-chip strong{display:block;font-size:12px}.floating-chip small{display:block;font-size:10px;color:#686868;font-weight:700}
+  .chip-a{left:-3%;bottom:26px}.chip-b{right:-2%;top:22px}
+  .feature-ribbon{background:#fff;border-bottom:1px solid var(--border)}
+  .feature-ribbon-inner{display:grid;grid-template-columns:repeat(3,1fr);padding-block:21px;gap:24px}
+  .feature{display:flex;align-items:center;gap:13px;padding-inline:18px;border-right:1px solid var(--border)}.feature:first-child{padding-left:0}.feature:last-child{border:0}
+  .feature-icon{width:38px;height:38px;border-radius:var(--r-md);background:#fff1f0;color:var(--red);display:grid;place-items:center;flex:0 0 auto}
+  .feature strong{font-size:14px;display:block}.feature span{font-size:12px;display:block;color:#666;font-weight:700}
+  main{padding:68px 0 76px}
+  .section-heading{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:28px}
+  .kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--red);font-weight:900;margin-bottom:9px}
+  .section-heading h2{font-family:var(--display);font-size:clamp(32px,4vw,48px);line-height:1.05;letter-spacing:-.05em;margin:0;font-weight:900}
+  .section-heading p{max-width:460px;color:#666;font-size:14px;margin:0}
+  .workspace{background:#fff;border:1px solid #dedfe2;border-radius:var(--r-lg);overflow:hidden}
+  .workspace-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 20px;border-bottom:1px solid var(--border);background:#fff}
+  .workspace-title{font-weight:900;display:flex;align-items:center;gap:10px}.workspace-title .brand-dot{height:9px;width:9px;background:var(--red);border-radius:2px}
+  .tabs{display:flex;gap:5px;background:#f1f1f1;padding:4px;border-radius:var(--pill)}
+  .tab{border:0;background:transparent;padding:10px 18px;border-radius:var(--pill);color:#565656;font-size:12px;font-weight:900;letter-spacing:.03em}
+  .tab[aria-selected="true"]{background:var(--black);color:#fff;box-shadow:0 1px 0 #0001}
+  .local-badge{font-size:10px;color:#12683a;letter-spacing:.06em;font-weight:900;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .local-badge:before{content:"";width:7px;height:7px;border-radius:50%;background:#2f9e60}
+  .tool-panel{padding:24px;display:none}.tool-panel.active{display:block}
+  .panel-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr);gap:24px;align-items:start}
+  .stack{display:grid;gap:17px;min-width:0}
+  .card{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;padding:18px;min-width:0}
+  .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .card h3{font-size:16px;font-weight:900;letter-spacing:-.02em;margin:0 0 4px}
+  .card-desc{font-size:12px;color:#696969;font-weight:700;margin:0;line-height:1.5}
+  .step-no{width:28px;height:28px;display:grid;place-items:center;flex:0 0 auto;background:var(--black);color:#fff;border-radius:50%;font-size:11px;font-weight:900}
+  .dropzone{display:flex;align-items:center;flex-direction:column;justify-content:center;min-height:176px;border:1.5px dashed #c7c7c7;border-radius:var(--r-md);padding:22px 15px;text-align:center;background:#fafafa;transition:border-color .15s,background .15s}
+  .dropzone.dragover{border-color:var(--red);background:#fff2f1}
+  .drop-icon{width:44px;height:44px;background:#fff0ef;color:var(--red);display:grid;place-items:center;border-radius:12px;margin-bottom:11px}
+  .dropzone strong{font-size:14px;margin-bottom:4px}.dropzone p{font-size:12px;color:#777;margin:0 0 12px;font-weight:700}
+  .hidden-file{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+  .drop-link{border:0;background:transparent;color:var(--red);padding:3px;font-weight:900;text-decoration:underline;text-underline-offset:3px;font-size:12px}
+  .file-meta{display:none;grid-template-columns:76px 1fr;gap:12px;align-items:center;margin-top:13px;padding:11px;background:#f8f8f8;border:1px solid var(--border);border-radius:var(--r-md)}
+  .file-meta.show{display:grid}
+  .mini-preview{width:76px;height:60px;object-fit:cover;background:#ddd;border-radius:4px}
+  .file-meta strong{display:block;font-size:12px;overflow-wrap:anywhere}.file-meta span{display:block;color:#777;font-size:11px;margin-top:3px}
+  .file-meta .remove-file{background:transparent;border:0;color:var(--red);font-size:11px;font-weight:900;padding:4px 0}
+  .field{display:grid;gap:7px}.field label,.label-row{font-size:12px;font-weight:900;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .muted{color:#777;font-size:11px;font-weight:700}
+  textarea,input[type="password"],input[type="text"],select{width:100%;background:#fff;color:#111;border:1px solid #d7d9dd;border-radius:var(--r-md);padding:12px 14px;font-size:14px;font-weight:700;letter-spacing:0;outline-offset:2px}
+  textarea{min-height:128px;resize:vertical;line-height:1.45}
+  textarea::placeholder,input::placeholder{color:#969696;font-weight:600}
+  select{appearance:auto;padding-right:10px}
+  .count-row{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:3px;color:#777;font-size:11px}
+  .count-row .count{color:#171717;font-weight:900}
+  .warn-box,.info-box,.status-box{border-radius:var(--r-md);padding:12px 13px;font-size:12px;font-weight:700;line-height:1.5;display:flex;gap:10px;align-items:flex-start}
+  .warn-box{background:#fff5df;color:#68420a;border:1px solid #f2dfb4}.info-box{background:#f7f7f7;border:1px solid var(--border);color:#555}.status-box{border:1px solid #dcdcdc;background:#fafafa;color:#333}
+  .status-box[data-kind="success"]{background:#edfff4;border-color:#b9e8ca;color:#155f34}.status-box[data-kind="error"]{background:#fff0ef;border-color:#f2c1bc;color:#8f150d}.status-box[data-kind="warning"]{background:#fff7e8;border-color:#f1d7a9;color:#754100}.status-box[data-kind="processing"]{background:#f2f2f2;color:#333}
+  .status-symbol{font-weight:900;flex:0 0 auto}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px}.toggle-copy strong{display:block;font-size:13px}.toggle-copy small{display:block;color:#777;font-size:11px;font-weight:700;margin-top:2px;line-height:1.45}
+  .switch{position:relative;display:inline-block;width:42px;height:24px;flex:0 0 auto}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;border-radius:99px;background:#c8c8c8;transition:.18s;cursor:pointer}.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:white;box-shadow:0 1px 3px #0002;transition:.18s}.switch input:checked+.slider{background:var(--red)}.switch input:checked+.slider:before{transform:translateX(18px)}
+  .security-fields{display:grid;gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+  .password-input{position:relative}.password-input input{padding-right:76px}.show-pass{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:#f4f4f4;border-radius:4px;padding:5px 7px;color:#444;font-size:10px;font-weight:900}
+  .strength{height:4px;background:#e9e9e9;border-radius:10px;overflow:hidden;margin-top:8px}.strength span{display:block;height:100%;width:0;background:var(--red);transition:width .15s,background .15s}.strength-note{font-size:10px;color:#777;margin-top:4px}
+  .algo-select{width:100%}.algo-detail{background:#f8f8f8;border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;margin-top:9px;display:flex;align-items:flex-start;gap:9px}
+  .recommended{background:#111;color:white;border-radius:var(--pill);font-size:9px;font-weight:900;padding:4px 7px;white-space:nowrap;letter-spacing:.04em}
+  .algo-detail p{font-size:11px;color:#696969;line-height:1.45;margin:0;font-weight:700}
+  .algo-detail strong{display:block;color:#111;font-size:11px;margin-bottom:3px}
+  .preview-card{background:#f9f9f9;border:1px solid var(--border);border-radius:var(--r-md);padding:14px}
+  .preview-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.preview-head strong{font-size:13px}.preview-status{font-size:10px;color:#777;font-weight:800}
+  .preview-stage{min-height:240px;border:1px solid var(--border);background:linear-gradient(45deg,#eeeeee 25%,transparent 25%,transparent 75%,#eeeeee 75%),linear-gradient(45deg,#eeeeee 25%,white 25%,white 75%,#eeeeee 75%);background-size:20px 20px;background-position:0 0,10px 10px;border-radius:5px;display:grid;place-items:center;overflow:hidden;position:relative}
+  .preview-stage img{display:none;max-width:100%;max-height:360px;object-fit:contain}.preview-stage img.show{display:block}
+  .preview-placeholder{text-align:center;padding:25px;color:#999;font-size:12px;font-weight:800}.preview-placeholder svg{display:block;margin:0 auto 9px;opacity:.45}
+  .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+  .metric{background:#fff;border:1px solid var(--border);padding:11px;border-radius:var(--r-md);min-width:0}.metric span{display:block;color:#777;font-size:10px;font-weight:800;margin-bottom:4px}.metric strong{display:block;font-size:14px;overflow-wrap:anywhere;letter-spacing:-.02em}
+  .capacity{margin-top:12px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:var(--r-md)}.capacity-top{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-bottom:8px}.capacity-top strong{font-size:12px}.capacity-bar{height:6px;background:#e9e9e9;border-radius:99px;overflow:hidden}.capacity-bar span{display:block;width:0;height:100%;background:var(--red);transition:width .2s}.capacity small{display:block;margin-top:7px;color:#777;font-size:10px;line-height:1.45}
+  .action-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}.action-row .btn{flex:1}.action-row .btn-quiet{flex:0 0 auto}
+  .result{display:none;margin-top:20px;border:1px solid #bce7c9;background:#f1fff5;border-radius:var(--r-md);padding:18px}.result.show{display:block}.result-title{display:flex;align-items:center;gap:10px;margin-bottom:13px}.result-title .check{width:30px;height:30px;border-radius:50%;background:#16824a;color:white;display:grid;place-items:center;font-weight:900}.result-title strong{display:block;font-size:15px}.result-title span{display:block;font-size:11px;color:#397a52}
+  .result-grid{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:start}.result-thumb{width:100%;max-height:140px;object-fit:contain;border:1px solid #d0e8d7;background:#fff;border-radius:5px}.result-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.result-item{background:#fff;border:1px solid #d3eddb;border-radius:5px;padding:9px}.result-item span{font-size:10px;color:#5c7664;display:block}.result-item strong{font-size:12px;overflow-wrap:anywhere;display:block;margin-top:3px}.result-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+  .decode-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);gap:24px;align-items:start}
+  .detect-panel{border:1px solid var(--border);background:#f9f9f9;border-radius:var(--r-md);padding:14px;margin-top:13px}.detect-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.detect-top strong{font-size:12px}.detect-chip{font-size:9px;font-weight:900;border-radius:var(--pill);background:#e6e6e6;padding:5px 8px;white-space:nowrap}.detect-chip.found{background:#111;color:#fff}.detect-list{display:grid;gap:7px}.detect-line{display:flex;justify-content:space-between;gap:10px;font-size:11px}.detect-line span{color:#777}.detect-line strong{text-align:right;overflow-wrap:anywhere}
+  .decoded-message{display:none;margin-top:17px}.decoded-message.show{display:block}.decoded-message textarea{min-height:140px;background:#fcfcfc;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere}
+  .edu-section{padding-top:84px}.edu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:24px}.edu-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:20px}.edu-number{font-family:var(--display);font-size:24px;font-weight:900;letter-spacing:-.06em;color:var(--red);margin-bottom:12px}.edu-card h3{font-size:16px;margin-bottom:7px}.edu-card p{font-size:12px;color:#666;margin:0;line-height:1.65}
+  .privacy{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:20px;background:#111;color:white;border-radius:var(--r-md);margin-top:24px;align-items:start}.privacy-icon{height:38px;width:38px;background:var(--red);border-radius:9px;display:grid;place-items:center}.privacy h3{font-size:14px;margin:0 0 3px}.privacy p{font-size:12px;color:#d1d1d1;margin:0;line-height:1.6}.privacy .fine{color:#a5a5a5;font-size:11px;margin-top:6px}
+  footer{background:#080808;color:white;padding:28px 0}.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:22px}.footer-brand{font-size:14px;font-weight:900;letter-spacing:-.03em}.footer-brand span{color:var(--red)}.footer-note{font-size:11px;color:#999;text-align:right;font-weight:700;max-width:560px}
+  .toast{position:fixed;right:22px;bottom:22px;max-width:min(420px,calc(100% - 32px));background:#111;color:white;border-left:4px solid var(--red);padding:14px 16px;border-radius:6px;box-shadow:0 8px 30px #0003;z-index:50;display:none;font-size:12px;font-weight:800}.toast.show{display:block;animation:slidein .18s ease-out}
+  @keyframes slidein{from{transform:translateY(8px);opacity:.3}to{transform:translateY(0);opacity:1}}
+  .spinner{width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+  .hide{display:none!important}
+  .disclaimer{font-size:10px;color:#777;font-weight:700;line-height:1.5;margin-top:11px}
+  @media(max-width:900px){.shell{width:min(100% - 32px,760px)}.hero-inner{grid-template-columns:1fr;gap:0;padding-block:58px 66px}.hero-visual{min-height:360px;max-width:520px;width:100%;margin:8px auto 0}.hero:before{inset:24% 0 0}.hero:after{right:-190px;top:45%}.panel-grid,.decode-grid{grid-template-columns:1fr}.preview-stage{min-height:200px}.preview-stage img{max-height:400px}.nav{gap:15px}.section-heading{align-items:flex-start;flex-direction:column}.edu-grid{gap:12px}.edu-card{padding:16px}}
+  @media(max-width:600px){.shell{width:calc(100% - 28px)}.topbar-inner{gap:8px}.topbar{height:66px}.nav a{display:none}.brand{font-size:20px}.nav-cta{padding:9px 13px;font-size:11px}.hero-inner{padding-block:46px 48px}.hero h1{font-size:clamp(48px,14vw,66px);margin:23px 0 15px}.hero-copy{font-size:15px}.hero-visual{min-height:288px;transform:scale(.94);margin-top:8px}.hero-art{width:min(100%,350px)}.art-scene{height:190px}.hero-orbit{width:270px;height:270px}.chip-a{left:-3%;bottom:10px}.chip-b{right:-4%;top:6px}.floating-chip{padding:9px 10px}.floating-chip strong{font-size:10px}.floating-chip small{font-size:9px}.feature-ribbon-inner{grid-template-columns:1fr;gap:0;padding-block:8px}.feature{border-right:0;border-bottom:1px solid var(--border);padding:12px 0}.feature:last-child{border:0}.feature-icon{height:33px;width:33px}.section-heading h2{font-size:34px}.section-heading p{font-size:12px}.workspace-head{padding:14px;flex-wrap:wrap}.workspace-title{font-size:13px}.local-badge{font-size:9px}.tabs{width:100%;order:3}.tab{flex:1;padding:10px 7px;font-size:11px}.tool-panel{padding:13px}.card{padding:14px}.panel-grid,.decode-grid{gap:13px}.dropzone{min-height:158px}.metric-grid{gap:7px}.metric{padding:9px}.metric strong{font-size:12px}.action-row{gap:8px}.action-row .btn{min-width:calc(50% - 4px);font-size:12px;padding:11px 12px}.action-row .btn-quiet{flex:1}.result{padding:13px}.result-grid{grid-template-columns:1fr}.result-thumb{max-height:180px}.result-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-section{padding-top:60px}.edu-grid{grid-template-columns:1fr}.edu-card{padding:18px}.privacy{padding:15px}.footer-inner{flex-direction:column;align-items:flex-start}.footer-note{text-align:left}.toast{right:14px;bottom:14px}}
+  @media(max-width:380px){#navStart{display:none}#languageSelect{max-width:90px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+  .language-switch{display:inline-flex;align-items:center;gap:6px;color:#aaa;font-size:11px;font-weight:900;letter-spacing:.04em;white-space:nowrap}
+  .language-switch select{max-width:132px;background:#161616;color:#fff;border:1px solid #383838;border-radius:var(--pill);padding:8px 11px;font-size:11px;font-weight:800;outline-offset:2px}
+  .language-switch select option{background:#fff;color:#111}
+  .terminal-panel{margin-top:28px;background:#090909;border:1px solid #252525;border-radius:var(--r-lg);overflow:hidden;color:#d4d4d4;font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
+  .terminal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 19px;border-bottom:1px solid #242424;background:#111}
+  .terminal-title{display:flex;align-items:center;gap:11px;min-width:0}.terminal-glyph{display:grid;place-items:center;width:35px;height:35px;background:var(--red);color:white;border-radius:6px;font-weight:900;font-size:14px;letter-spacing:-.08em}.terminal-title strong{display:block;color:#fff;font:900 12px var(--body);letter-spacing:.08em}.terminal-title small{display:block;color:#777;font-size:10px;margin-top:2px;letter-spacing:.08em}
+  .terminal-head-right{display:flex;align-items:center;gap:13px}.terminal-chip{border:1px solid #42302e;color:#ff776d;background:#26100f;border-radius:4px;padding:5px 8px;font-size:9px;font-weight:900;letter-spacing:.08em}.terminal-live{display:inline-flex;align-items:center;gap:6px;color:#a7a7a7;font-size:9px;font-weight:900;letter-spacing:.06em}.terminal-live i{width:6px;height:6px;border-radius:50%;background:#53d77a;box-shadow:0 0 0 3px #53d77a1c}.terminal-clear{border:0;background:transparent;color:#888;font-family:inherit;font-size:10px;padding:5px}.terminal-clear:hover{color:#fff}.terminal-screen{padding:17px 19px;min-height:125px;max-height:240px;overflow:auto;background:linear-gradient(#0a0a0a,#080808)}.terminal-welcome{font-size:11px;color:#888;margin-bottom:9px}.terminal-prompt{color:#ff655b;font-weight:900}.terminal-line{display:grid;grid-template-columns:76px 64px minmax(0,1fr);gap:9px;margin:6px 0;font-size:10px;line-height:1.55;overflow-wrap:anywhere}.terminal-time{color:#575757}.terminal-tag{color:#fb8279;font-weight:900}.terminal-tag.success{color:#6bd28b}.terminal-tag.warning{color:#e6ba6b}.terminal-tag.error{color:#ff6257}.terminal-message{color:#b9b9b9}.terminal-message::before{content:"› ";color:#555}.terminal-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 19px;border-top:1px solid #242424;background:#0d0d0d;color:#626262;font-size:9px;font-weight:900;letter-spacing:.07em}
+  @media(max-width:900px){.language-switch{order:2}.nav{gap:11px}.terminal-head{align-items:flex-start}.terminal-head-right{gap:9px}}
+  @media(max-width:600px){.nav{gap:8px}.language-switch{font-size:0}.language-switch select{max-width:86px;padding:8px 6px;font-size:10px}.nav-cta{padding:8px 8px;font-size:10px}.terminal-head{padding:13px;flex-wrap:wrap}.terminal-head-right{width:100%;justify-content:flex-start;flex-wrap:wrap}.terminal-screen{padding:13px;max-height:190px}.terminal-line{grid-template-columns:59px 53px minmax(0,1fr);gap:6px;font-size:9px}.terminal-foot{padding:10px 13px;font-size:8px}}
+
+</style>
+<script>
+  // PIXELCRYPT uses the official, version-pinned libsodium.js browser build only for XChaCha20-Poly1305.
+  // No image, message, ciphertext, or password is sent to this dependency.
+  window.__pixelCryptSodium = null;
+  window.__pixelCryptSodiumReady = false;
+  window.sodium = {
+    onload: function (sodium) {
+      window.__pixelCryptSodium = sodium;
+      window.__pixelCryptSodiumReady = true;
+      document.dispatchEvent(new Event('pixelcrypt-sodium-ready'));
+    }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/libsodium@0.8.4/dist/browsers/sodium.js" onerror="document.dispatchEvent(new Event('pixelcrypt-sodium-failed'))"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="#top" aria-label="PIXELCRYPT home">
+      <span class="brand-mark" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z" fill="white"/><path d="M14 14h3v3h-3zM18 18h2v2h-2zM18 13h2v2h-2zM14 18h2v2h-2z" fill="white"/></svg></span>
+      <span>PIXELCRYPT<small>IMAGE STEGANOGRAPHY</small></span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#tool">Workspace</a><a href="#how-it-works">How it works</a>
+      <label class="language-switch" for="languageSelect"><span aria-hidden="true">文</span><select id="languageSelect" aria-label="Choose language"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select></label>
+      <button class="nav-cta" type="button" id="navStart">Open workspace&nbsp; ↗</button>
+    </nav>
+  </div>
+</header>
+<section class="hero" id="top">
+  <div class="shell hero-inner">
+    <div>
+      <span class="eyebrow"><i class="eyebrow-dot"></i> CLIENT-SIDE PROCESSING</span>
+      <h1>Hide in<br>plain <span class="red">sight.</span></h1>
+      <p class="hero-copy">Hide a message inside an image. Add a layer of encryption. Bring it back when you need it — all from your browser.</p>
+      <div class="hero-actions">
+        <button class="btn btn-white" id="heroEncode" type="button">Encode a message <span aria-hidden="true">↗</span></button>
+        <button class="btn btn-outline" id="heroDecode" type="button">Decode an image</button>
+      </div>
+    </div>
+    <div class="hero-visual" aria-label="Decorative illustration of hidden image pixels" role="img">
+      <div class="hero-orbit"></div>
+      <div class="hero-art">
+        <div class="art-frame"><div class="art-top"><span></span><span></span><span></span></div><div class="art-scene"><i class="art-sun"></i><i class="art-hill"></i><div class="art-pixels" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="art-caption"><span>PIXEL DATA / 01</span><b>MESSAGE HIDDEN</b></div></div>
+      </div>
+      <div class="floating-chip chip-a"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2"/><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor" opacity=".14"/><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M12 14v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>Optional encryption</strong><small>Protect the contents</small></div></div>
+      <div class="floating-chip chip-b"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" fill="currentColor"/><rect x="14" y="3" width="7" height="7" fill="currentColor" opacity=".5"/><rect x="3" y="14" width="7" height="7" fill="currentColor" opacity=".5"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z" fill="#EB1000"/></svg><div><strong>LSB steganography</strong><small>Stored in image pixels</small></div></div>
+    </div>
+  </div>
+</section>
+<section class="feature-ribbon" aria-label="Key features">
+  <div class="shell feature-ribbon-inner">
+    <div class="feature"><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2"/><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M12 14v3" stroke="currentColor" stroke-width="2"/></svg></span><div><strong>Optional encryption</strong><span>Choose an authenticated cipher</span></div></div>
+    <div class="feature"><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/><path d="M8 8h3v3H8zM14 8h2v2h-2zM8 14h2v2H8zM13 13h3v3h-3z" fill="currentColor"/></svg></span><div><strong>Local processing</strong><span>Your file stays in your browser</span></div></div>
+    <div class="feature"><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 17v3h14v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><div><strong>PNG output</strong><span>Lossless download for recovery</span></div></div>
+  </div>
+</section>
+<main id="tool">
+  <div class="shell">
+    <div class="section-heading">
+      <div><div class="kicker">Your private workspace</div><h2>Make a message<br>disappear.</h2></div>
+      <p>Pick an image, write your message, and choose how it should be protected. To recover it later, upload the PNG you downloaded here.</p>
+    </div>
+    <section class="workspace" aria-label="Steganography workspace">
+      <div class="workspace-head">
+        <div class="workspace-title"><span class="brand-dot"></span> PIXELCRYPT TOOL</div>
+        <div class="local-badge">CLIENT-SIDE PROCESSING</div>
+        <div class="tabs" role="tablist" aria-label="Steganography mode">
+          <button class="tab" id="tabEncode" type="button" role="tab" aria-selected="true" aria-controls="panelEncode">01&nbsp; ENCODE</button>
+          <button class="tab" id="tabDecode" type="button" role="tab" aria-selected="false" aria-controls="panelDecode">02&nbsp; DECODE</button>
+        </div>
+      </div>
+      <section class="tool-panel active" id="panelEncode" role="tabpanel" aria-labelledby="tabEncode">
+        <div class="panel-grid">
+          <div class="stack">
+            <div class="card">
+              <div class="card-head"><div><h3>Choose your image</h3><p class="card-desc">Start with a PNG, JPG, or WebP image. Your original file is not uploaded.</p></div><span class="step-no">01</span></div>
+              <input class="hidden-file" type="file" id="encodeFile" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp">
+              <div class="dropzone" id="encodeDrop" tabindex="0" role="button" aria-label="Choose or drop a source image">
+                <span class="drop-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <strong>Choose an image</strong><p>Drag and drop your image here, or browse files.</p><button class="drop-link" type="button" id="browseEncode">Browse image</button><span class="muted">PNG · JPG · WebP · Up to 20 MB / 16 MP</span>
+              </div>
+              <div class="file-meta" id="encodeMeta"><img class="mini-preview" id="encodeMini" alt="Selected source thumbnail"><div><strong id="encodeFileName">No file selected</strong><span id="encodeFileInfo"></span><button class="remove-file" type="button" id="removeEncode">Remove image</button></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Write your secret message</h3><p class="card-desc">UTF-8 supports Indonesian, English, line breaks, and emoji.</p></div><span class="step-no">02</span></div>
+              <div class="field"><div class="label-row"><label for="secretMessage">Secret message</label><span class="muted" id="messageCount">0 characters</span></div><textarea id="secretMessage" placeholder="Type the message you want to hide inside your image..." spellcheck="false" autocapitalize="sentences"></textarea><div class="count-row"><span>Message size: <b class="count" id="messageBytes">0 bytes</b></span><span id="capacityVerdict">Choose an image to check capacity</span></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Encryption settings</h3><p class="card-desc">Steganography hides the message; encryption helps protect its contents.</p></div><span class="step-no">03</span></div>
+              <div class="toggle-row"><div class="toggle-copy"><strong>Encrypt message before hiding</strong><small>Recommended for private content. Turn off only when you understand the risk.</small></div><label class="switch"><input type="checkbox" id="encryptToggle" checked aria-label="Encrypt message before hiding"><span class="slider"></span></label></div>
+              <div class="security-fields" id="securityFields">
+                <div class="field"><label for="algorithm">Encryption method</label><select id="algorithm" class="algo-select"><option value="1">AES-256-GCM — Recommended</option><option value="2" disabled>XChaCha20-Poly1305 — Loading dependency…</option><option value="3">AES-256-CBC + HMAC-SHA-256</option><option value="4">AES-256-CTR + HMAC-SHA-256</option></select><div class="algo-detail" id="algoDetail"><span class="recommended">RECOMMENDED</span><div><strong>AES-256-GCM</strong><p>Authenticated encryption through the browser's Web Crypto API. Detects tampering and wrong passwords.</p></div></div></div>
+                <div class="field"><label for="masterPassword">Master password</label><div class="password-input"><input type="password" id="masterPassword" autocomplete="new-password" placeholder="Create a strong password"><button class="show-pass" type="button" data-toggle-password="masterPassword">SHOW</button></div><div class="strength"><span id="strengthBar"></span></div><div class="strength-note" id="strengthNote">Password strength is evaluated locally.</div></div>
+                <div class="field"><label for="confirmPassword">Confirm password</label><div class="password-input"><input type="password" id="confirmPassword" autocomplete="new-password" placeholder="Type the same password again"><button class="show-pass" type="button" data-toggle-password="confirmPassword">SHOW</button></div><span class="muted" id="passwordMatch">Enter your password twice to reduce typing mistakes.</span></div>
+              </div>
+              <div class="warn-box hide" id="plainWarning"><span aria-hidden="true">!</span><div><strong>Not encrypted.</strong> The message will be hidden, but anyone who knows this extraction format may be able to read it.</div></div>
+              <div class="disclaimer">Password-based encryption uses PBKDF2-HMAC-SHA-256 with a random 16-byte salt and 600,000 iterations. The password itself is never placed in the image or stored by this page.</div>
+            </div>
+          </div>
+          <aside class="stack">
+            <div class="card">
+              <div class="preview-head"><strong>Image preview</strong><span class="preview-status" id="encodePreviewStatus">Waiting for image</span></div>
+              <div class="preview-stage"><img id="encodePreview" alt="Selected source image preview"><div class="preview-placeholder" id="encodePreviewPlaceholder"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="m4 18 5-5 3 3 3-4 5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Your selected image will appear here.</div></div>
+              <div class="metric-grid"><div class="metric"><span>IMAGE DIMENSIONS</span><strong id="encodeDimensions">—</strong></div><div class="metric"><span>IMAGE FILE SIZE</span><strong id="encodeFileSize">—</strong></div><div class="metric"><span>OPAQUE PIXELS</span><strong id="opaquePixels">—</strong></div><div class="metric"><span>USABLE MESSAGE</span><strong id="maxMessageSize">—</strong></div></div>
+              <div class="capacity"><div class="capacity-top"><span>Estimated capacity usage</span><strong id="capacityPercent">—</strong></div><div class="capacity-bar"><span id="capacityBar"></span></div><small id="capacityDetail">Capacity is based on opaque RGB pixels and includes format and encryption overhead.</small></div>
+            </div>
+            <div class="info-box"><span aria-hidden="true">i</span><div><strong>Keep the output as PNG.</strong> Do not resize, edit, screenshot, or send it through a service that recompresses the image — that may destroy the hidden data.</div></div>
+            <div class="status-box" id="encodeStatus" data-kind="info" role="status" aria-live="polite"><span class="status-symbol">i</span><span id="encodeStatusText">Choose an image and enter a message to begin.</span></div>
+          </aside>
+        </div>
+        <div class="action-row"><button class="btn btn-red" type="button" id="encodeButton"><span>Encode message</span><span aria-hidden="true">↗</span></button><button class="btn btn-light" type="button" id="resetEncode">Reset</button></div>
+        <div class="result" id="encodeResult" aria-live="polite">
+          <div class="result-title"><span class="check">✓</span><div><strong>Steganography complete</strong><span>Your message was embedded and checked in memory. Download the PNG below.</span></div></div>
+          <div class="result-grid"><img class="result-thumb" id="resultThumb" alt="Generated stego PNG preview"><div><div class="result-meta"><div class="result-item"><span>OUTPUT FILE</span><strong id="resultFileName">—</strong></div><div class="result-item"><span>OUTPUT SIZE</span><strong id="resultFileSize">—</strong></div><div class="result-item"><span>DIMENSIONS</span><strong id="resultDimensions">—</strong></div><div class="result-item"><span>PROTECTION</span><strong id="resultAlgorithm">—</strong></div></div><div class="result-actions"><button class="btn btn-dark" id="downloadPng" type="button">Download PNG ↓</button><button class="btn btn-light" id="encodeAnother" type="button">Encode another</button><button class="btn btn-quiet" id="goDecode" type="button">Go to Decode →</button></div></div></div>
+        </div>
+      </section>
+      <section class="tool-panel" id="panelDecode" role="tabpanel" aria-labelledby="tabDecode">
+        <div class="decode-grid">
+          <div class="stack">
+            <div class="card">
+              <div class="card-head"><div><h3>Upload a stego image</h3><p class="card-desc">Select the original PIXELCRYPT PNG containing your hidden message.</p></div><span class="step-no">01</span></div>
+              <input class="hidden-file" type="file" id="decodeFile" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp">
+              <div class="dropzone" id="decodeDrop" tabindex="0" role="button" aria-label="Choose or drop a stego image">
+                <span class="drop-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4v12m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <strong>Upload stego image</strong><p>Choose the PNG image that contains your hidden message.</p><button class="drop-link" id="browseDecode" type="button">Browse image</button><span class="muted">PNG recommended · Up to 20 MB / 16 MP</span>
+              </div>
+              <div class="file-meta" id="decodeMeta"><img class="mini-preview" id="decodeMini" alt="Selected stego image thumbnail"><div><strong id="decodeFileName">No file selected</strong><span id="decodeFileInfo"></span><button class="remove-file" type="button" id="removeDecode">Remove image</button></div></div>
+              <div class="warn-box hide" id="decodeFormatWarning" style="margin-top:12px"><span aria-hidden="true">!</span><div>JPEG and other lossy conversions can corrupt hidden bits. Use the untouched PNG downloaded from PIXELCRYPT.</div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Extract your message</h3><p class="card-desc">PIXELCRYPT reads the embedded header and identifies the encryption method automatically.</p></div><span class="step-no">02</span></div>
+              <div class="detect-panel"><div class="detect-top"><strong>MESSAGE DETECTION</strong><span class="detect-chip" id="detectChip">NOT SCANNED</span></div><div class="detect-list"><div class="detect-line"><span>Format</span><strong id="detectedFormat">—</strong></div><div class="detect-line"><span>Protection</span><strong id="detectedAlgorithm">—</strong></div><div class="detect-line"><span>Payload size</span><strong id="detectedPayload">—</strong></div><div class="detect-line"><span>Validation</span><strong id="detectedValidation">—</strong></div></div></div>
+              <div class="security-fields hide" id="decodePasswordField"><div class="field"><label for="decodePassword">Decryption password</label><div class="password-input"><input type="password" id="decodePassword" autocomplete="off" placeholder="Enter the same password used for encoding"><button class="show-pass" type="button" data-toggle-password="decodePassword">SHOW</button></div><span class="muted">The password is used locally and is not saved.</span></div></div>
+              <div class="action-row"><button class="btn btn-red" type="button" id="decodeButton" disabled><span>Extract message</span><span aria-hidden="true">↗</span></button><button class="btn btn-light" type="button" id="resetDecode">Clear</button></div>
+              <div class="status-box" id="decodeStatus" data-kind="info" role="status" aria-live="polite" style="margin-top:13px"><span class="status-symbol">i</span><span id="decodeStatusText">Upload an image to scan its hidden-data header.</span></div>
+              <div class="decoded-message" id="decodedMessage"><div class="card-head" style="margin:16px 0 9px"><div><h3 id="decodedTitle">Message recovered</h3><p class="card-desc" id="decodedInfo">Decryption verified.</p></div></div><textarea id="recoveredText" readonly aria-label="Recovered message"></textarea><div class="action-row"><button class="btn btn-dark" type="button" id="copyMessage">Copy message</button><button class="btn btn-light" type="button" id="decodeAnother">Decode another image</button></div></div>
+            </div>
+          </div>
+          <aside class="stack">
+            <div class="card"><div class="preview-head"><strong>Selected image</strong><span class="preview-status" id="decodePreviewStatus">Waiting for image</span></div><div class="preview-stage"><img id="decodePreview" alt="Selected stego image preview"><div class="preview-placeholder" id="decodePreviewPlaceholder"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="m4 18 5-5 3 3 3-4 5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>The image you upload will appear here.</div></div><div class="metric-grid"><div class="metric"><span>DIMENSIONS</span><strong id="decodeDimensions">—</strong></div><div class="metric"><span>FILE SIZE</span><strong id="decodeFileSize">—</strong></div></div></div>
+            <div class="info-box"><span aria-hidden="true">i</span><div><strong>Wrong password?</strong> You can inspect the raw encrypted payload without a password. Only the matching password and successful authentication reveal the original plaintext.</div></div>
+            <div class="info-box"><span aria-hidden="true">i</span><div><strong>Missing message?</strong> A screenshot, resize, color adjustment, or lossy compression may have changed the LSB data. Try the original downloaded PNG.</div></div>
+          </aside>
+        </div>
+      </section>
+    </section>
+    <section class="terminal-panel" aria-label="Processing log">
+      <div class="terminal-head"><div class="terminal-title"><span class="terminal-glyph">&gt;_</span><div><strong data-i18n="PROCESS LOG">PROCESS LOG</strong><small data-i18n="LOCAL SESSION TRACE">LOCAL SESSION TRACE</small></div></div><div class="terminal-head-right"><span class="terminal-chip" data-i18n="PROCESSED">PROCESSED</span><span class="terminal-live"><i></i><span data-i18n="LIVE SESSION">LIVE SESSION</span></span><button type="button" id="clearTerminal" class="terminal-clear" data-i18n="Clear log">Clear log</button></div></div>
+      <div class="terminal-screen" role="log" aria-live="polite" aria-label="PIXELCRYPT process log"><div class="terminal-welcome"><span class="terminal-prompt">pixelcrypt@browser:~$</span> <span data-i18n="Waiting for a local process…">Waiting for a local process…</span></div><div id="terminalLines"></div></div>
+      <div class="terminal-foot"><span data-i18n="NO BACKEND CONNECTION">NO BACKEND CONNECTION</span><span data-i18n="LOGS EXCLUDE MESSAGE CONTENT AND PASSWORDS">LOGS EXCLUDE MESSAGE CONTENT AND PASSWORDS</span></div>
+    </section>
+    <section class="edu-section" id="how-it-works">
+      <div class="section-heading"><div><div class="kicker">The idea behind the tool</div><h2>Hidden is not the<br>same as encrypted.</h2></div><p>PIXELCRYPT demonstrates two different concepts. They can complement each other, but they solve different problems.</p></div>
+      <div class="edu-grid">
+        <article class="edu-card"><div class="edu-number">01 / LSB</div><h3>Least Significant Bit</h3><p>Image pixels contain red, green, and blue color values. PIXELCRYPT changes the lowest bit of opaque RGB channels to store packet bits, while leaving alpha unchanged.</p></article>
+        <article class="edu-card"><div class="edu-number">02 / CRYPTO</div><h3>Encrypt before embedding</h3><p>AES-GCM, XChaCha20-Poly1305, and the CBC/CTR plus HMAC options protect message contents when configured correctly. The password is never stored in the image.</p></article>
+        <article class="edu-card"><div class="edu-number">03 / LIMITS</div><h3>Keep the PNG untouched</h3><p>Lossy conversion, resizing, filters, and statistical analysis can expose or destroy simple LSB steganography. This is a learning tool, not a claim of perfect invisibility or absolute security.</p></article>
+      </div>
+      <div class="privacy"><span class="privacy-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5c0 4.6-2.9 8-7 10-4.1-2-7-5.4-7-10V6l7-3Z" stroke="white" stroke-width="1.8"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h3>Privacy notice</h3><p>PIXELCRYPT processes selected images, secret messages, and passwords locally in your browser. It does not upload your files, password, or message contents to an application backend.</p><p class="fine">The page and the optional XChaCha dependency may be downloaded from their hosting servers. Do not use a modified or untrusted copy of this HTML for highly sensitive information.</p></div></div>
+    </section>
+  </div>
+</main>
+<footer><div class="shell footer-inner"><div class="footer-brand"><span>PIXEL</span>CRYPT · HIDE IN PLAIN SIGHT</div><div class="footer-note">A browser-based educational tool. Steganography does not guarantee that hidden data cannot be detected.</div></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  'use strict';
+  const MAX_FILE_BYTES = 20 * 1024 * 1024;
+  const MAX_PIXELS = 16_000_000;
+  const KDF_ITERATIONS = 600_000;
+  const MIN_KDF_ITERATIONS = 100_000;
+  const MAX_KDF_ITERATIONS = 1_000_000;
+  const HEADER_LENGTH = 20;
+  const MAGIC = [0x50, 0x58, 0x53, 0x54]; // PXST
+  const FLAGS_PLAINTEXT = 0;
+  const FLAGS_ENCRYPTED = 1;
+  const ALG_NAMES = {0:'Not encrypted',1:'AES-256-GCM',2:'XChaCha20-Poly1305',3:'AES-256-CBC + HMAC-SHA-256',4:'AES-256-CTR + HMAC-SHA-256'};
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder('utf-8', {fatal:true});
+  const $ = (id) => document.getElementById(id);
+  const state = {
+    encode: {file:null, previewUrl:null, pixels:null, width:0, height:0, opaquePixels:0, opaqueChannels:0, outputBlob:null, outputUrl:null, outputName:''},
+    decode: {file:null, previewUrl:null, pixels:null, width:0, height:0, opaquePixels:0, opaqueChannels:0, packet:null, header:null}
+  };
+  let toastTimer = 0;
+  let busyEncode = false;
+  let busyDecode = false;
+  let sodiumState = 'loading';
+
+  // CRC32 is used only to detect accidental corruption in plaintext mode; it is not cryptographic authentication.
+  const crcTable = (() => { const table = new Uint32Array(256); for (let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);table[n]=c>>>0;}return table; })();
+  function crc32(bytes) { let c = 0xFFFFFFFF; for (let i=0;i<bytes.length;i++) c = crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function concatBytes(...arrays) { const total = arrays.reduce((sum,arr)=>sum+arr.length,0); const out = new Uint8Array(total); let offset=0; for(const arr of arrays){out.set(arr,offset);offset+=arr.length;} return out; }
+  function randomBytes(length) { const out = new Uint8Array(length); crypto.getRandomValues(out); return out; }
+  function fmtBytes(n) { if(!Number.isFinite(n)) return '—'; if(n < 1024) return `${n} B`; const units=['KB','MB','GB']; let x=n/1024, i=0; while(x>=1024 && i<units.length-1){x/=1024;i++;} return `${x.toFixed(x>=100?0:x>=10?1:2)} ${units[i]}`; }
+  function fmtNum(n) { return new Intl.NumberFormat('en-US').format(n); }
+  function cleanFileStem(name) { let stem=(name||'image').replace(/\.[^.]+$/,'').normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60); return stem || 'image'; }
+  function setStatus(prefix, kind, message) { const box=$(prefix+'Status'); if(!box) return; box.dataset.kind=kind; const symbol=box.querySelector('.status-symbol'); if(symbol) symbol.textContent= kind==='success'?'✓':kind==='error'?'!':kind==='processing'?'…':kind==='warning'?'!':'i'; $(prefix+'StatusText').textContent=message; if(window.pixelCryptTerminalLog) window.pixelCryptTerminalLog(prefix.toUpperCase(),message,kind); }
+  function showToast(message) { const el=$('toast'); el.textContent=message; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),3600); }
+  function revoke(url) { if(url) { try { URL.revokeObjectURL(url); } catch(_){} } }
+  function switchTab(tab) { const encode=tab==='encode'; $('tabEncode').setAttribute('aria-selected',String(encode)); $('tabDecode').setAttribute('aria-selected',String(!encode)); $('panelEncode').classList.toggle('active',encode); $('panelDecode').classList.toggle('active',!encode); if(encode) $('panelEncode').focus({preventScroll:true}); else $('panelDecode').focus({preventScroll:true}); }
+  function strictTypeOkay(file) { const ext=(file.name.split('.').pop()||'').toLowerCase(); const allowedExt=['png','jpg','jpeg','webp']; const allowedMime=['image/png','image/jpeg','image/webp']; return allowedExt.includes(ext) && (!file.type || allowedMime.includes(file.type.toLowerCase())); }
+  function updateMetaView(which) {
+    const e=state[which]; const prefix=which==='encode'?'encode':'decode';
+    const preview=$(prefix+'Preview'), placeholder=$(prefix+'PreviewPlaceholder');
+    if(e.previewUrl){preview.src=e.previewUrl;preview.classList.add('show');placeholder.classList.add('hide');$(prefix+'PreviewStatus').textContent='Image ready';}
+    else {preview.removeAttribute('src');preview.classList.remove('show');placeholder.classList.remove('hide');$(prefix+'PreviewStatus').textContent='Waiting for image';}
+    if(e.file){$(prefix+'Meta').classList.add('show');$(prefix+'Mini').src=e.previewUrl;$(prefix+'FileName').textContent=e.file.name;$(prefix+'FileInfo').textContent=`${fmtBytes(e.file.size)} · ${e.width} × ${e.height}`;
+      $(prefix+'Dimensions').textContent=`${e.width} × ${e.height}`;$(prefix+'FileSize').textContent=fmtBytes(e.file.size);
+    } else {$(prefix+'Meta').classList.remove('show');$(prefix+'Dimensions').textContent='—';$(prefix+'FileSize').textContent='—';}
+  }
+  async function loadImageFile(file, which) {
+    if(!file) return;
+    const e=state[which];
+    if(file.size>MAX_FILE_BYTES) throw new Error('File exceeds the 20 MB limit. Please choose a smaller image.');
+    if(!strictTypeOkay(file)) throw new Error('Please choose a PNG, JPG, or WebP image.');
+    let bitmap;
+    try { bitmap=await createImageBitmap(file); } catch(_) { throw new Error('The file could not be decoded as an image. It may be damaged or unsupported.'); }
+    try {
+      const width=bitmap.width, height=bitmap.height;
+      if(!width||!height||width*height>MAX_PIXELS) throw new Error(`Image exceeds the ${fmtNum(MAX_PIXELS)}-pixel limit. Choose a smaller-resolution image.`);
+      const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+      const ctx=canvas.getContext('2d',{willReadFrequently:true}); if(!ctx) throw new Error('Your browser could not create an image-processing canvas.');
+      ctx.drawImage(bitmap,0,0); const img=ctx.getImageData(0,0,width,height);
+      // Count opaque pixels/channels once. Both encode and decode skip every pixel whose alpha is not 255.
+      let opaquePixels=0;for(let p=3;p<img.data.length;p+=4) if(img.data[p]===255) opaquePixels++;
+      canvas.width=0; canvas.height=0;
+      revoke(e.previewUrl); e.previewUrl=URL.createObjectURL(file);e.file=file;e.pixels=img.data;e.width=width;e.height=height;e.opaquePixels=opaquePixels;e.opaqueChannels=opaquePixels*3;
+      if(which==='encode') {
+        $('encodeFileName').textContent=file.name;$('encodeFileInfo').textContent=`${fmtBytes(file.size)} · ${width} × ${height}`;
+        $('encodeMeta').classList.add('show');$('opaquePixels').textContent=fmtNum(opaquePixels); updateEncodeCapacity(); setStatus('encode','success','Image loaded. Enter a message and review the estimated capacity.');
+      } else {
+        $('decodeFileName').textContent=file.name;$('decodeFileInfo').textContent=`${fmtBytes(file.size)} · ${width} × ${height}`;
+        $('decodeMeta').classList.add('show');$('decodeFormatWarning').classList.toggle('hide',file.type==='image/png'||/\.png$/i.test(file.name));
+        resetDecodeResults(); await scanForPacket();
+      }
+      updateMetaView(which);
+    } finally { if(bitmap) bitmap.close(); }
+  }
+  function capacityBytes(e) { return Math.floor(e.opaqueChannels/8); }
+  function estimatedPacketLength(messageLength, encrypted, algorithm) {
+    if(!encrypted) return HEADER_LENGTH + messageLength + 4;
+    let nonceLen=12, payloadLen=messageLength+16;
+    if(algorithm===2){nonceLen=24;payloadLen=messageLength+16;}
+    else if(algorithm===3){nonceLen=16;const cipherLen=(Math.floor(messageLength/16)+1)*16;payloadLen=cipherLen+32;}
+    else if(algorithm===4){nonceLen=16;payloadLen=messageLength+32;}
+    return HEADER_LENGTH + 16 + nonceLen + payloadLen;
+  }
+  function maxMessageCapacity(e, encrypted, algorithm) {
+    if(!e.pixels) return 0;
+    const cap=capacityBytes(e);let lo=0,hi=cap;
+    while(lo<hi){const mid=Math.ceil((lo+hi)/2); if(estimatedPacketLength(mid,encrypted,algorithm)<=cap)lo=mid;else hi=mid-1;}
+    return lo;
+  }
+  function updateEncodeCapacity() {
+    const e=state.encode;
+    const text=$('secretMessage').value;const bytes=encoder.encode(text).length; $('messageCount').textContent=`${text.length} character${text.length===1?'':'s'}`;$('messageBytes').textContent=`${fmtNum(bytes)} bytes`;
+    const encrypted=$('encryptToggle').checked;const algorithm=Number($('algorithm').value)||1; const usable=maxMessageCapacity(e,encrypted,algorithm);
+    $('maxMessageSize').textContent=e.pixels?fmtBytes(usable):'—';
+    if(!e.pixels){$('capacityPercent').textContent='—';$('capacityBar').style.width='0%';$('capacityVerdict').textContent='Choose an image to check capacity';$('capacityDetail').textContent='Capacity is based on opaque RGB pixels and includes packet and encryption overhead.';return;}
+    const totalCapacity=capacityBytes(e);const packetLen=estimatedPacketLength(bytes,encrypted,algorithm);const percent=totalCapacity?Math.min(100,packetLen/totalCapacity*100):100;
+    $('capacityPercent').textContent=`${Math.min(100,percent).toFixed(1)}%`; $('capacityBar').style.width=`${Math.min(100,percent)}%`;
+    const fits=bytes>0&&packetLen<=totalCapacity; $('capacityVerdict').textContent=!text?'Enter a message':fits?'Fits in image':'Too large for image';$('capacityVerdict').style.color=!text?'#777':fits?'#147D45':'#EB1000';
+    $('capacityDetail').textContent=`Packet: ${fmtBytes(packetLen)} · available LSB storage: ${fmtBytes(totalCapacity)}. Estimated maximum message for this method: ${fmtBytes(usable)}.`;
+  }
+  function setEncodeBusy(value) { busyEncode=value; $('encodeButton').disabled=value; $('resetEncode').disabled=value; $('encodeButton').innerHTML=value?'<span class="spinner" aria-hidden="true"></span><span>Processing…</span>':'<span>Encode message</span><span aria-hidden="true">↗</span>'; }
+  function setDecodeBusy(value) { busyDecode=value; $('decodeButton').disabled=value||!state.decode.packet; $('resetDecode').disabled=value; const encrypted=state.decode.header?.flags===FLAGS_ENCRYPTED; const hasPassword=!!$('decodePassword').value; $('decodeButton').innerHTML=value?'<span class="spinner" aria-hidden="true"></span><span>Processing…</span>':`<span>${encrypted?(hasPassword?'Extract & decrypt':'Extract ciphertext'):'Extract message'}</span><span aria-hidden="true">↗</span>`; }
+  function makeHeader({flags,algorithm,kdf,iterations,saltLen,nonceLen,payloadLen}) {
+    const out=new Uint8Array(HEADER_LENGTH);out.set(MAGIC,0);out[4]=1;out[5]=flags;out[6]=algorithm;out[7]=kdf;const v=new DataView(out.buffer);v.setUint32(8,iterations,false);out[12]=saltLen;out[13]=nonceLen;v.setUint16(14,0,false);v.setUint32(16,payloadLen,false);return out;
+  }
+  function parseHeader(bytes, capBytes) {
+    if(bytes.length<HEADER_LENGTH) throw new Error('Image capacity is too small for a PIXELCRYPT header.');
+    for(let i=0;i<4;i++) if(bytes[i]!==MAGIC[i]) throw new Error('No PIXELCRYPT message detected.');
+    if(bytes[4]!==1) throw new Error(`Unsupported PIXELCRYPT packet version: ${bytes[4]}.`);
+    const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+    const flags=bytes[5],algorithm=bytes[6],kdf=bytes[7],iterations=view.getUint32(8,false),saltLen=bytes[12],nonceLen=bytes[13],reserved=view.getUint16(14,false),payloadLen=view.getUint32(16,false);
+    if(flags!==FLAGS_PLAINTEXT&&flags!==FLAGS_ENCRYPTED) throw new Error('The embedded header contains an invalid encryption flag.');
+    if(reserved!==0) throw new Error('The embedded header is invalid or corrupted (reserved field).');
+    if(!payloadLen || HEADER_LENGTH+saltLen+nonceLen+payloadLen>capBytes) throw new Error('The embedded message length is incomplete or exceeds this image capacity.');
+    if(flags===FLAGS_PLAINTEXT){if(algorithm!==0||kdf!==0||iterations!==0||saltLen!==0||nonceLen!==0||payloadLen<4)throw new Error('The plaintext packet header is invalid or corrupted.');}
+    else {
+      if(![1,2,3,4].includes(algorithm)) throw new Error(`Unknown encryption algorithm ID: ${algorithm}.`);
+      if(kdf!==1) throw new Error(`Unknown key-derivation method ID: ${kdf}.`);
+      if(iterations<MIN_KDF_ITERATIONS||iterations>MAX_KDF_ITERATIONS) throw new Error('The password-derivation parameters are outside the accepted safety range.');
+      if(saltLen!==16) throw new Error('The embedded salt length is invalid.');
+      const expectedNonce={1:12,2:24,3:16,4:16}[algorithm];if(nonceLen!==expectedNonce) throw new Error('The embedded nonce or IV length is invalid.');
+      if((algorithm===1||algorithm===2)&&payloadLen<16) throw new Error('The encrypted payload is too short to contain an authentication tag.');
+      if(algorithm===3&&(payloadLen<48||(payloadLen-32)%16!==0)) throw new Error('The AES-CBC payload length is invalid.');
+      if(algorithm===4&&payloadLen<32) throw new Error('The AES-CTR payload is too short to contain its authentication code.');
+    }
+    return {version:bytes[4],flags,algorithm,kdf,iterations,saltLen,nonceLen,payloadLen,totalLen:HEADER_LENGTH+saltLen+nonceLen+payloadLen};
+  }
+  // Serialize/deserialize one byte MSB-first, walking opaque pixel RGB channels in fixed R->G->B order.
+  function embedPacketIntoImageData(imageData, packet) {
+    const data=imageData.data;let byteIndex=0,bitIndex=7;
+    for(let p=0;p<data.length;p+=4){if(data[p+3]!==255)continue;for(let c=0;c<3;c++){if(byteIndex>=packet.length)return;const bit=(packet[byteIndex]>>>bitIndex)&1;data[p+c]=(data[p+c]&0xFE)|bit;bitIndex--;if(bitIndex<0){bitIndex=7;byteIndex++;}}}
+    if(byteIndex<packet.length) throw new Error('Insufficient image capacity to store the complete packet.');
+  }
+  function extractPacketFromImageData(dataLike, count) {
+    const data=dataLike.data||dataLike;const out=new Uint8Array(count);let byteIndex=0,bitIndex=7;
+    for(let p=0;p<data.length&&byteIndex<count;p+=4){if(data[p+3]!==255)continue;for(let c=0;c<3&&byteIndex<count;c++){out[byteIndex]|=(data[p+c]&1)<<bitIndex;bitIndex--;if(bitIndex<0){bitIndex=7;byteIndex++;}}}
+    if(byteIndex<count) throw new Error('The image does not contain enough usable opaque RGB channels.');return out;
+  }
+  async function deriveBits(password, salt, iterations, lengthBits) {
+    const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
+    return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,lengthBits));
+  }
+  async function encryptPayload(plain, algorithm, password) {
+    const salt=randomBytes(16), iterations=KDF_ITERATIONS;
+    const nonceLen={1:12,2:24,3:16,4:16}[algorithm];const nonce=randomBytes(nonceLen);
+    let predictedPayloadLength;
+    if(algorithm===1||algorithm===2) predictedPayloadLength=plain.length+16;
+    else if(algorithm===3) predictedPayloadLength=(Math.floor(plain.length/16)+1)*16+32;
+    else predictedPayloadLength=plain.length+32;
+    const header=makeHeader({flags:FLAGS_ENCRYPTED,algorithm,kdf:1,iterations,saltLen:16,nonceLen,payloadLen:predictedPayloadLength});
+    const aad=concatBytes(header,salt,nonce);let payload;
+    if(algorithm===1){
+      const raw=await deriveBits(password,salt,iterations,256);const key=await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},false,['encrypt']);payload=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,additionalData:aad,tagLength:128},key,plain));raw.fill(0);
+    } else if(algorithm===2){
+      if(!window.__pixelCryptSodiumReady||!window.__pixelCryptSodium) throw new Error('XChaCha20-Poly1305 is not available because the cryptography dependency has not loaded. Choose another method or reload when online.');
+      const sodium=window.__pixelCryptSodium;const raw=await deriveBits(password,salt,iterations,256);payload=sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(plain,aad,null,nonce,raw);raw.fill(0);
+    } else {
+      const raw=await deriveBits(password,salt,iterations,512);const encRaw=raw.slice(0,32),macRaw=raw.slice(32,64);raw.fill(0);
+      const encKey=await crypto.subtle.importKey('raw',encRaw,{name:algorithm===3?'AES-CBC':'AES-CTR'},false,['encrypt']);
+      const macKey=await crypto.subtle.importKey('raw',macRaw,{name:'HMAC',hash:'SHA-256'},false,['sign']);encRaw.fill(0);macRaw.fill(0);
+      const cipher=new Uint8Array(await crypto.subtle.encrypt(algorithm===3?{name:'AES-CBC',iv:nonce}:{name:'AES-CTR',counter:nonce,length:64},encKey,plain));
+      const macData=concatBytes(header,salt,nonce,cipher);const mac=new Uint8Array(await crypto.subtle.sign('HMAC',macKey,macData));payload=concatBytes(cipher,mac);
+    }
+    if(payload.length!==predictedPayloadLength) throw new Error('Internal packet-length validation failed; no output was created.');
+    return {packet:concatBytes(header,salt,nonce,payload),algorithm};
+  }
+  async function decryptPayload(header, salt, nonce, payload, password) {
+    const {algorithm,iterations}=header;const aad=concatBytes(makeHeader(header),salt,nonce);
+    // For authenticated encryption the exact header bytes extracted from the image must be used as AAD.
+    // makeHeader(header) reproduces the specified packet layout exactly.
+    if(algorithm===1){const raw=await deriveBits(password,salt,iterations,256);const key=await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},false,['decrypt']);raw.fill(0);return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:nonce,additionalData:aad,tagLength:128},key,payload));}
+    if(algorithm===2){if(!window.__pixelCryptSodiumReady||!window.__pixelCryptSodium)throw new Error('XChaCha20-Poly1305 dependency is unavailable.');const sodium=window.__pixelCryptSodium;const raw=await deriveBits(password,salt,iterations,256);try{return new Uint8Array(sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(null,payload,aad,nonce,raw));}finally{raw.fill(0);}}
+    if(algorithm===3||algorithm===4){const cipher=payload.slice(0,-32),mac=payload.slice(-32);const raw=await deriveBits(password,salt,iterations,512);const encRaw=raw.slice(0,32),macRaw=raw.slice(32,64);raw.fill(0);const encKey=await crypto.subtle.importKey('raw',encRaw,{name:algorithm===3?'AES-CBC':'AES-CTR'},false,['decrypt']);const macKey=await crypto.subtle.importKey('raw',macRaw,{name:'HMAC',hash:'SHA-256'},false,['verify']);encRaw.fill(0);macRaw.fill(0);const macData=concatBytes(makeHeader(header),salt,nonce,cipher);const okay=await crypto.subtle.verify('HMAC',macKey,mac,macData);if(!okay)throw new Error('Authentication failed.');return new Uint8Array(await crypto.subtle.decrypt(algorithm===3?{name:'AES-CBC',iv:nonce}:{name:'AES-CTR',counter:nonce,length:64},encKey,cipher));}
+    throw new Error('Unknown encryption method.');
+  }
+  function headerObjectWithRaw(header, rawHeader) { return {...header,rawHeader}; }
+  function crcPayload(plain) { const out=new Uint8Array(plain.length+4);out.set(plain);new DataView(out.buffer).setUint32(plain.length,crc32(plain),false);return out; }
+  function validateUtf8(bytes) { try { return decoder.decode(bytes); } catch(_) { throw new Error('The extracted payload is not valid UTF-8 text or has been corrupted.'); } }
+
+  async function doEncode() {
+    if(busyEncode) return;
+    const e=state.encode;const message=$('secretMessage').value;const encrypted=$('encryptToggle').checked;const algorithm=Number($('algorithm').value)||1;const password=$('masterPassword').value;const confirm=$('confirmPassword').value;
+    if(!e.file||!e.pixels) {setStatus('encode','error','Choose an image before encoding a message.');showToast('Choose an image first.');return;}
+    if(!message.length){setStatus('encode','error','Enter a message before encoding.');$('secretMessage').focus();return;}
+    if(encrypted){if(!password){setStatus('encode','error','Enter a master password before enabling encryption.');$('masterPassword').focus();return;}if(encoder.encode(password).length<8){setStatus('encode','warning','Use a password with at least 8 bytes. A longer, unique password is recommended.');$('masterPassword').focus();return;}if(password!==confirm){setStatus('encode','error','The password confirmation does not match.');$('confirmPassword').focus();return;}if(algorithm===2&&(!window.__pixelCryptSodiumReady||!window.__pixelCryptSodium)){setStatus('encode','error','XChaCha20-Poly1305 is unavailable because its dependency has not loaded. Choose another algorithm.');return;}}
+    if(!window.crypto?.subtle){setStatus('encode','error','Web Crypto is unavailable. Open the site over HTTPS (for example, GitHub Pages) in a modern browser.');return;}
+    const plain=encoder.encode(message);const packetLen=estimatedPacketLength(plain.length,encrypted,algorithm);if(packetLen>capacityBytes(e)){setStatus('encode','error',`Insufficient image capacity. Estimated packet ${fmtBytes(packetLen)}, available ${fmtBytes(capacityBytes(e))}. Try a larger image or shorter message.`);return;}
+    setEncodeBusy(true);$('encodeResult').classList.remove('show');setStatus('encode','processing','Preparing packet and processing pixels locally…');
+    try {
+      await new Promise(resolve=>setTimeout(resolve,30));
+      let packet, algorithmName='Not encrypted';
+      if(encrypted){const result=await encryptPayload(plain,algorithm,password);packet=result.packet;algorithmName=ALG_NAMES[algorithm];}
+      else {const payload=crcPayload(plain);const header=makeHeader({flags:FLAGS_PLAINTEXT,algorithm:0,kdf:0,iterations:0,saltLen:0,nonceLen:0,payloadLen:payload.length});packet=concatBytes(header,payload);}
+      if(packet.length>capacityBytes(e))throw new Error('Insufficient image capacity after final encryption overhead was calculated.');
+      const imageData=new ImageData(new Uint8ClampedArray(e.pixels),e.width,e.height);embedPacketIntoImageData(imageData,packet);
+      // Round-trip the LSB packet in memory before creating the lossless PNG.
+      const recovered=extractPacketFromImageData(imageData,packet.length);for(let i=0;i<packet.length;i++)if(packet[i]!==recovered[i])throw new Error('Internal pixel round-trip validation failed.');
+      const canvas=document.createElement('canvas');canvas.width=e.width;canvas.height=e.height;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser could not create the output canvas.');ctx.putImageData(imageData,0,0);
+      const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('The browser could not produce a PNG file.')),'image/png'));
+      canvas.width=0;canvas.height=0;
+      revoke(e.outputUrl);e.outputBlob=blob;e.outputUrl=URL.createObjectURL(blob);e.outputName=`${cleanFileStem(e.file.name)}-pixelcrypt.png`;
+      $('resultThumb').src=e.outputUrl;$('resultFileName').textContent=e.outputName;$('resultFileSize').textContent=fmtBytes(blob.size);$('resultDimensions').textContent=`${e.width} × ${e.height}`;$('resultAlgorithm').textContent=algorithmName;$('encodeResult').classList.add('show');
+      setStatus('encode','success',`Message embedded. Packet integrity was checked in memory. Download the PNG to preserve its LSB data.`);showToast('Message embedded successfully. Download your PNG.');$('encodeResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    } catch(error) {
+      const friendly=(error&&typeof error.message==='string')?error.message:'Encoding failed. Please try a different image or method.';
+      setStatus('encode','error',friendly);showToast(friendly.length>90?'Encoding failed. Check the status message.':friendly);
+    } finally { setEncodeBusy(false); updateEncodeCapacity(); }
+  }
+  function resetDecodeResults() {
+    state.decode.packet=null;state.decode.header=null;$('detectChip').textContent='NOT SCANNED';$('detectChip').classList.remove('found');$('detectedFormat').textContent='—';$('detectedAlgorithm').textContent='—';$('detectedPayload').textContent='—';$('detectedValidation').textContent='—';$('decodePasswordField').classList.add('hide');$('decodePassword').value='';$('decodedMessage').classList.remove('show');$('recoveredText').value='';$('decodedTitle').dataset.localeCipher='false';$('decodedTitle').textContent='Message recovered';$('decodedInfo').textContent='Decryption verified.';$('decodeButton').disabled=true;
+  }
+  async function scanForPacket() {
+    const e=state.decode;resetDecodeResults();setStatus('decode','processing','Scanning the image header…');
+    try {
+      const cap=capacityBytes(e);if(cap<HEADER_LENGTH)throw new Error('This image is too small to contain a PIXELCRYPT header.');
+      const first=extractPacketFromImageData(e.pixels,HEADER_LENGTH);const header=parseHeader(first,cap);
+      const packet=extractPacketFromImageData(e.pixels,header.totalLen);const rawHeader=packet.slice(0,HEADER_LENGTH);
+      let offset=HEADER_LENGTH;const salt=packet.slice(offset,offset+header.saltLen);offset+=header.saltLen;const nonce=packet.slice(offset,offset+header.nonceLen);offset+=header.nonceLen;const payload=packet.slice(offset,offset+header.payloadLen);
+      // Store exact bytes as well as parsed metadata; authentication uses the bytes that were actually embedded.
+      header.rawHeader=rawHeader;state.decode.header=header;state.decode.packet={salt,nonce,payload,bytes:packet};
+      $('detectChip').textContent='MESSAGE FOUND';$('detectChip').classList.add('found');$('detectedFormat').textContent='PXST · Version 1';$('detectedAlgorithm').textContent=ALG_NAMES[header.algorithm];$('detectedPayload').textContent=fmtBytes(header.payloadLen);$('detectedValidation').textContent='Header valid';
+      if(header.flags===FLAGS_ENCRYPTED){$('decodePasswordField').classList.remove('hide');$('decodePassword').value='';setStatus('decode','success',`Detected encrypted data: ${ALG_NAMES[header.algorithm]}. Enter the matching password to recover the message.`);}
+      else {setStatus('decode','success','A plaintext message was detected. It is hidden but not encrypted; checksum validation will run during extraction.');}
+      $('decodeButton').disabled=false;$('decodeButton').innerHTML=`<span>${header.flags===FLAGS_ENCRYPTED?'Extract ciphertext':'Extract message'}</span><span aria-hidden="true">↗</span>`;
+    } catch(error) {
+      state.decode.packet=null;state.decode.header=null;$('detectChip').textContent='NO VALID MESSAGE';$('detectChip').classList.remove('found');$('detectedValidation').textContent='Not validated';$('decodeButton').disabled=true;setStatus('decode','error',error.message||'No valid PIXELCRYPT message was detected.');
+    }
+  }
+  async function doDecode() {
+    if(busyDecode||!state.decode.packet||!state.decode.header)return;
+    const h=state.decode.header;const {salt,nonce,payload}=state.decode.packet;const password=$('decodePassword').value;
+    if(h.flags===FLAGS_ENCRYPTED&&!password){
+      // Show the extracted ciphertext as printable Base64, never as fake plaintext.
+      // This does not decrypt the secret or bypass authentication.
+      const bytes=payload;let binary='';const chunkSize=0x8000;for(let i=0;i<bytes.length;i+=chunkSize)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunkSize,bytes.length)));
+      const armored='PIXELCRYPT-CIPHERTEXT-BASE64\n'+btoa(binary);
+      $('recoveredText').value=armored;$('decodedTitle').textContent='Encrypted payload preview';$('decodedTitle').dataset.localeCipher='true';
+      $('decodedInfo').textContent=`Raw ciphertext for ${ALG_NAMES[h.algorithm]} is shown as Base64. This is not the original message and cannot be read as plaintext without the matching password.`;
+      $('decodedMessage').classList.add('show');$('detectedValidation').textContent='Ciphertext only · not decrypted';
+      setStatus('decode','warning','Encrypted data extracted without a password. Showing ciphertext only; enter the matching password to decrypt and authenticate.');
+      showToast('Ciphertext preview ready. Original message remains encrypted.');$('decodedMessage').scrollIntoView({behavior:'smooth',block:'nearest'});return;
+    }
+    if(!window.crypto?.subtle){setStatus('decode','error','Web Crypto is unavailable. Open the site over HTTPS in a modern browser.');return;}
+    if(h.algorithm===2&&(!window.__pixelCryptSodiumReady||!window.__pixelCryptSodium)){setStatus('decode','error','This image uses XChaCha20-Poly1305, but the required dependency is unavailable. No fallback was attempted.');return;}
+    setDecodeBusy(true);$('decodedMessage').classList.remove('show');setStatus('decode','processing',h.flags===FLAGS_ENCRYPTED?'Deriving key and verifying the message locally…':'Checking payload checksum…');
+    try {
+      await new Promise(resolve=>setTimeout(resolve,25));let plaintext;
+      if(h.flags===FLAGS_PLAINTEXT){const raw=payload.slice(0,-4);const expected=new DataView(payload.buffer,payload.byteOffset+payload.length-4,4).getUint32(0,false);if(crc32(raw)!==expected)throw new Error('Checksum mismatch. The image or embedded data may have been corrupted.');plaintext=raw;}
+      else plaintext=await decryptPayload(h.rawHeader?{...h,rawHeader:undefined}:h,salt,nonce,payload,password);
+      const message=validateUtf8(plaintext);$('recoveredText').value=message;$('decodedTitle').dataset.localeCipher='false';$('decodedTitle').textContent='Message recovered';$('decodedInfo').textContent=h.flags===FLAGS_ENCRYPTED?`${ALG_NAMES[h.algorithm]} authenticated successfully. Plaintext was only shown after verification.`:'Plaintext extracted and CRC32 checksum matched. Note: this message was not encrypted.';$('decodedMessage').classList.add('show');$('detectedValidation').textContent=h.flags===FLAGS_ENCRYPTED?'Authentication passed':'CRC32 passed';setStatus('decode','success','Message recovered successfully. The text below is safe to copy as plain text.');showToast('Message recovered successfully.');$('decodedMessage').scrollIntoView({behavior:'smooth',block:'nearest'});
+    } catch(error) {
+      // Do not reveal whether password, tag, MAC, or payload was specifically at fault.
+      const friendly=h.flags===FLAGS_ENCRYPTED?'Decryption failed. The password may be incorrect, or the embedded data may be corrupted.':(error.message||'The plaintext packet is invalid or corrupted.');setStatus('decode','error',friendly);$('detectedValidation').textContent='Verification failed';showToast('Unable to recover a valid message.');
+    } finally { setDecodeBusy(false); }
+  }
+  function resetEncodeForm() {
+    if(busyEncode)return;const e=state.encode;revoke(e.previewUrl);revoke(e.outputUrl);Object.assign(e,{file:null,previewUrl:null,pixels:null,width:0,height:0,opaquePixels:0,opaqueChannels:0,outputBlob:null,outputUrl:null,outputName:''});
+    $('encodeFile').value='';$('secretMessage').value='';$('encryptToggle').checked=true;$('algorithm').value='1';$('masterPassword').value='';$('confirmPassword').value='';$('masterPassword').type='password';$('confirmPassword').type='password';document.querySelectorAll('[data-toggle-password]').forEach(b=>b.textContent='SHOW');$('encodeMeta').classList.remove('show');$('encodeResult').classList.remove('show');$('encodeMini').removeAttribute('src');$('resultThumb').removeAttribute('src');$('opaquePixels').textContent='—';$('strengthBar').style.width='0%';$('strengthNote').textContent='Password strength is evaluated locally.';$('passwordMatch').textContent='Enter your password twice to reduce typing mistakes.';toggleSecurity();updateMetaView('encode');updateEncodeCapacity();setStatus('encode','info','Choose an image and enter a message to begin.');
+  }
+  function resetDecodeForm() {
+    if(busyDecode)return;const e=state.decode;revoke(e.previewUrl);Object.assign(e,{file:null,previewUrl:null,pixels:null,width:0,height:0,opaquePixels:0,opaqueChannels:0,packet:null,header:null});$('decodeFile').value='';$('decodeMeta').classList.remove('show');$('decodeMini').removeAttribute('src');$('decodeFormatWarning').classList.add('hide');resetDecodeResults();updateMetaView('decode');setStatus('decode','info','Upload an image to scan its hidden-data header.');
+  }
+  function toggleSecurity() { const active=$('encryptToggle').checked;$('securityFields').classList.toggle('hide',!active);$('plainWarning').classList.toggle('hide',active);updateEncodeCapacity(); }
+  function passwordStrength() {
+    const p=$('masterPassword').value;let score=0;if(p.length>=8)score++;if(p.length>=12)score++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))score++;if(/\d/.test(p))score++;if(/[^a-zA-Z0-9]/.test(p))score++;const pct=[0,20,40,60,80,100][score];$('strengthBar').style.width=pct+'%';$('strengthBar').style.background=score>=4?'#16824a':score>=2?'#cb8500':'#EB1000';$('strengthNote').textContent=!p?'Password strength is evaluated locally.':score<=1?'Weak — use a longer, less predictable password.':score<=3?'Fair — consider adding length and variety.':'Stronger password pattern. Avoid reusing it elsewhere.';checkPasswordMatch(); }
+  function checkPasswordMatch() { const p=$('masterPassword').value,c=$('confirmPassword').value;const el=$('passwordMatch');if(!p&&!c)el.textContent='Enter your password twice to reduce typing mistakes.';else if(!c)el.textContent='Confirm your password.';else if(p===c){el.textContent='Passwords match.';el.style.color='#147D45';}else{el.textContent='Passwords do not match yet.';el.style.color='#EB1000';} }
+  function updateAlgorithmDetail() { const n=Number($('algorithm').value);const details={1:['AES-256-GCM','Authenticated encryption through the browser\'s Web Crypto API. Detects tampering and wrong passwords.',true],2:['XChaCha20-Poly1305','Authenticated encryption with a 24-byte nonce, provided by the pinned libsodium.js browser dependency.',false],3:['AES-256-CBC + HMAC-SHA-256','AES-CBC encrypts the data, while a separate HMAC key verifies integrity before decryption.',false],4:['AES-256-CTR + HMAC-SHA-256','AES-CTR encrypts the data, while a separate HMAC key verifies integrity before decryption.',false]};const d=details[n]||details[1];$('algoDetail').innerHTML='';if(d[2]){const badge=document.createElement('span');badge.className='recommended';badge.textContent='RECOMMENDED';$('algoDetail').appendChild(badge);}const wrap=document.createElement('div');const strong=document.createElement('strong');strong.textContent=d[0];const p=document.createElement('p');p.textContent=d[1];wrap.append(strong,p);$('algoDetail').appendChild(wrap);updateEncodeCapacity(); }
+  function setSodiumUi(available) { const opt=$('algorithm').querySelector('option[value="2"]');if(available){sodiumState='ready';opt.disabled=false;opt.textContent='XChaCha20-Poly1305';}else{sodiumState='failed';opt.disabled=true;opt.textContent='XChaCha20-Poly1305 — dependency unavailable';if($('algorithm').value==='2')$('algorithm').value='1';}updateAlgorithmDetail(); }
+  function wireDropzone(which) {
+    const drop=$(which+'Drop'),input=$(which+'File'),browse=$('browse'+(which==='encode'?'Encode':'Decode'));
+    browse.addEventListener('click',e=>{e.stopPropagation();input.click();});drop.addEventListener('click',e=>{if(e.target.closest('button'))return;input.click();});drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click();}});
+    input.addEventListener('change',async()=>{const file=input.files&&input.files[0];if(!file)return;try{await loadImageFile(file,which);}catch(error){setStatus(which,'error',error.message||'Could not load the image.');showToast(error.message||'Could not load the image.');input.value='';}});
+    for(const type of ['dragenter','dragover'])drop.addEventListener(type,e=>{e.preventDefault();drop.classList.add('dragover');});for(const type of ['dragleave','drop'])drop.addEventListener(type,e=>{e.preventDefault();drop.classList.remove('dragover');});drop.addEventListener('drop',async e=>{const file=e.dataTransfer?.files?.[0];if(!file)return;try{await loadImageFile(file,which);}catch(error){setStatus(which,'error',error.message||'Could not load the image.');showToast(error.message||'Could not load the image.');}});
+  }
+  $('navStart').addEventListener('click',()=>{switchTab('encode');$('tool').scrollIntoView({behavior:'smooth'});});
+  $('heroEncode').addEventListener('click',()=>{switchTab('encode');$('tool').scrollIntoView({behavior:'smooth'});});$('heroDecode').addEventListener('click',()=>{switchTab('decode');$('tool').scrollIntoView({behavior:'smooth'});});
+  $('tabEncode').addEventListener('click',()=>switchTab('encode'));$('tabDecode').addEventListener('click',()=>switchTab('decode'));
+  $('browseEncode').addEventListener('click',()=>{});$('browseDecode').addEventListener('click',()=>{});
+  wireDropzone('encode');wireDropzone('decode');
+  $('secretMessage').addEventListener('input',updateEncodeCapacity);$('encryptToggle').addEventListener('change',toggleSecurity);$('algorithm').addEventListener('change',updateAlgorithmDetail);$('masterPassword').addEventListener('input',passwordStrength);$('confirmPassword').addEventListener('input',checkPasswordMatch);$('decodePassword').addEventListener('input',()=>{if(state.decode.header?.flags===FLAGS_ENCRYPTED){$('decodeButton').disabled=!state.decode.packet||busyDecode;$('decodeButton').innerHTML=`<span>${$('decodePassword').value?'Extract & decrypt':'Extract ciphertext'}</span><span aria-hidden="true">↗</span>`;}});
+  document.querySelectorAll('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=$(btn.dataset.togglePassword);const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'HIDE':'SHOW';}));
+  $('encodeButton').addEventListener('click',doEncode);$('resetEncode').addEventListener('click',resetEncodeForm);$('removeEncode').addEventListener('click',resetEncodeForm);$('encodeAnother').addEventListener('click',resetEncodeForm);
+  $('downloadPng').addEventListener('click',()=>{const e=state.encode;if(!e.outputBlob||!e.outputUrl){showToast('There is no PNG to download yet.');return;}const a=document.createElement('a');a.href=e.outputUrl;a.download=e.outputName;document.body.appendChild(a);a.click();a.remove();});
+  $('goDecode').addEventListener('click',()=>{switchTab('decode');$('tool').scrollIntoView({behavior:'smooth'});});$('decodeButton').addEventListener('click',doDecode);$('resetDecode').addEventListener('click',resetDecodeForm);$('removeDecode').addEventListener('click',resetDecodeForm);$('decodeAnother').addEventListener('click',resetDecodeForm);
+  $('copyMessage').addEventListener('click',async()=>{const text=$('recoveredText').value;try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);else{$('recoveredText').focus();$('recoveredText').select();const ok=document.execCommand('copy');if(!ok)throw new Error('Copy command unavailable');}showToast('Message copied to clipboard.');}catch(_){$('recoveredText').focus();$('recoveredText').select();showToast('Select the message text and copy it manually.');}});
+  document.addEventListener('pixelcrypt-sodium-ready',()=>setSodiumUi(true));document.addEventListener('pixelcrypt-sodium-failed',()=>setSodiumUi(false));
+  if(window.__pixelCryptSodiumReady)setSodiumUi(true);else setTimeout(()=>{if(!window.__pixelCryptSodiumReady&&sodiumState==='loading'){setSodiumUi(false);}},9000);
+  if(!window.crypto?.subtle){setStatus('encode','warning','Web Crypto is unavailable in this context. Host this page on HTTPS to enable encryption.');}
+  toggleSecurity();updateEncodeCapacity();
+  window.addEventListener('beforeunload',()=>{revoke(state.encode.previewUrl);revoke(state.encode.outputUrl);revoke(state.decode.previewUrl);});
+})();
+</script>
+<script>
+(() => {
+  'use strict';
+  const languageSelect = document.getElementById('languageSelect');
+  const terminalLines = document.getElementById('terminalLines');
+  if (!languageSelect || !terminalLines) return;
+  let currentLanguage = 'en';
+  const translations = {
+    'Workspace':'Ruang kerja','How it works':'Cara kerja','Open workspace':'Buka ruang kerja',
+    'CLIENT-SIDE PROCESSING':'PEMROSESAN LOKAL','Hide in':'Sembunyikan dalam','plain ':'','sight.':'pandangan.',
+    'Hide a message inside an image. Add a layer of encryption. Bring it back when you need it — all from your browser.':'Sembunyikan pesan di dalam gambar. Tambahkan lapisan enkripsi. Pulihkan kembali kapan pun dibutuhkan — langsung dari browser.',
+    'Encode a message':'Sisipkan pesan','Decode an image':'Ekstrak gambar','Optional encryption':'Enkripsi opsional','Protect the contents':'Lindungi isi pesan','LSB steganography':'Steganografi LSB','Stored in image pixels':'Disimpan pada piksel gambar',
+    'Choose an authenticated cipher':'Pilih algoritma enkripsi terautentikasi','Local processing':'Pemrosesan lokal','Your file stays in your browser':'File tetap di browser Anda','PNG output':'Hasil PNG','Lossless download for recovery':'Unduhan lossless untuk pemulihan',
+    'Your private workspace':'Ruang kerja pribadi','Make a message':'Buat pesan','disappear.':'menghilang.','Pick an image, write your message, and choose how it should be protected. To recover it later, upload the PNG you downloaded here.':'Pilih gambar, tulis pesan, dan tentukan perlindungannya. Untuk memulihkannya, unggah kembali PNG yang telah diunduh.',
+    'PIXELCRYPT TOOL':'ALAT PIXELCRYPT','01  ENCODE':'01  SISIPKAN','02  DECODE':'02  EKSTRAK','PROCESSING LOCAL':'PEMROSESAN LOKAL',
+    'Choose your image':'Pilih gambar','Start with a PNG, JPG, or WebP image. Your original file is not uploaded.':'Mulai dengan gambar PNG, JPG, atau WebP. File asli tidak diunggah.','Choose an image':'Pilih gambar','Drag and drop your image here, or browse files.':'Seret dan lepaskan gambar di sini, atau telusuri file.','Browse image':'Telusuri gambar','PNG · JPG · WebP · Up to 20 MB / 16 MP':'PNG · JPG · WebP · Maks. 20 MB / 16 MP','No file selected':'Belum ada file dipilih','Remove image':'Hapus gambar',
+    'Write your secret message':'Tulis pesan rahasia','UTF-8 supports Indonesian, English, line breaks, and emoji.':'UTF-8 mendukung bahasa Indonesia, Inggris, baris baru, dan emoji.','Secret message':'Pesan rahasia','Type the message you want to hide inside your image...':'Ketik pesan yang ingin disembunyikan di dalam gambar...','Message size:':'Ukuran pesan:','characters':'karakter','bytes':'byte','Choose an image to check capacity':'Pilih gambar untuk memeriksa kapasitas','Enter a message':'Masukkan pesan','Fits in image':'Cukup untuk gambar','Too large for image':'Terlalu besar untuk gambar',
+    'Encryption settings':'Pengaturan enkripsi','Steganography hides the message; encryption helps protect its contents.':'Steganografi menyembunyikan pesan; enkripsi membantu melindungi isinya.','Encrypt message before hiding':'Enkripsi pesan sebelum disembunyikan','Recommended for private content. Turn off only when you understand the risk.':'Disarankan untuk konten privat. Nonaktifkan hanya jika memahami risikonya.','Encryption method':'Metode enkripsi','Master password':'Kata sandi utama','Create a strong password':'Buat kata sandi yang kuat','Confirm password':'Konfirmasi kata sandi','Type the same password again':'Ketik ulang kata sandi yang sama','SHOW':'TAMPILKAN','HIDE':'SEMBUNYIKAN','Password strength is evaluated locally.':'Kekuatan kata sandi dinilai secara lokal.','Enter your password twice to reduce typing mistakes.':'Masukkan kata sandi dua kali untuk mengurangi kesalahan ketik.','Not encrypted.':'Tidak dienkripsi.','The message will be hidden, but anyone who knows this extraction format may be able to read it.':'Pesan akan disembunyikan, tetapi siapa pun yang mengetahui format ekstraksi ini mungkin dapat membacanya.','Password-based encryption uses PBKDF2-HMAC-SHA-256 with a random 16-byte salt and 600,000 iterations. The password itself is never placed in the image or stored by this page.':'Enkripsi berbasis kata sandi menggunakan PBKDF2-HMAC-SHA-256 dengan salt acak 16 byte dan 600.000 iterasi. Kata sandi tidak pernah disimpan di dalam gambar atau oleh halaman ini.',
+    'Image preview':'Pratinjau gambar','Waiting for image':'Menunggu gambar','Your selected image will appear here.':'Gambar yang dipilih akan muncul di sini.','IMAGE DIMENSIONS':'DIMENSI GAMBAR','IMAGE FILE SIZE':'UKURAN FILE GAMBAR','OPAQUE PIXELS':'PIKSEL OPAS','USABLE MESSAGE':'KAPASITAS PESAN','Estimated capacity usage':'Perkiraan penggunaan kapasitas','Capacity is based on opaque RGB pixels and includes format and encryption overhead.':'Kapasitas dihitung dari piksel RGB opak, termasuk overhead format dan enkripsi.','Capacity is based on opaque RGB pixels and includes packet and encryption overhead.':'Kapasitas dihitung dari piksel RGB opak, termasuk overhead paket dan enkripsi.','Keep the output as PNG.':'Simpan hasil dalam format PNG.','Do not resize, edit, screenshot, or send it through a service that recompresses the image — that may destroy the hidden data.':'Jangan ubah ukuran, edit, tangkap layar, atau kirim melalui layanan yang mengompres ulang gambar — data tersembunyi dapat rusak.',
+    'Choose an image and enter a message to begin.':'Pilih gambar dan masukkan pesan untuk memulai.','Encode message':'Sisipkan pesan','Reset':'Atur ulang','Steganography complete':'Steganografi selesai','Your message was embedded and checked in memory. Download the PNG below.':'Pesan telah disisipkan dan diperiksa di memori. Unduh PNG di bawah.','OUTPUT FILE':'FILE HASIL','OUTPUT SIZE':'UKURAN HASIL','DIMENSIONS':'DIMENSI','PROTECTION':'PERLINDUNGAN','Download PNG ↓':'Unduh PNG ↓','Encode another':'Sisipkan lagi','Go to Decode →':'Ke Ekstrak →',
+    'Upload a stego image':'Unggah gambar stego','Select the original PIXELCRYPT PNG containing your hidden message.':'Pilih PNG PIXELCRYPT asli yang berisi pesan tersembunyi.','Upload stego image':'Unggah gambar stego','Choose the PNG image that contains your hidden message.':'Pilih gambar PNG yang berisi pesan tersembunyi.','PNG recommended · Up to 20 MB / 16 MP':'Disarankan PNG · Maks. 20 MB / 16 MP','JPEG and other lossy conversions can corrupt hidden bits. Use the untouched PNG downloaded from PIXELCRYPT.':'JPEG dan konversi lossy lainnya dapat merusak bit tersembunyi. Gunakan PNG hasil unduhan PIXELCRYPT yang belum diubah.',
+    'Extract your message':'Ekstrak pesan Anda','PIXELCRYPT reads the embedded header and identifies the encryption method automatically.':'PIXELCRYPT membaca header yang disisipkan dan mengenali metode enkripsi secara otomatis.','MESSAGE DETECTION':'DETEKSI PESAN','NOT SCANNED':'BELUM DIPINDAI','Format':'Format','Protection':'Perlindungan','Payload size':'Ukuran payload','Validation':'Validasi','Decryption password':'Kata sandi dekripsi','Enter the same password used for encoding':'Masukkan kata sandi yang sama dengan saat penyisipan','The password is used locally and is not saved.':'Kata sandi digunakan secara lokal dan tidak disimpan.','Extract message':'Ekstrak pesan','Clear':'Bersihkan','Upload an image to scan its hidden-data header.':'Unggah gambar untuk memindai header data tersembunyi.','Message recovered':'Pesan berhasil dipulihkan','Decryption verified.':'Dekripsi terverifikasi.','Copy message':'Salin pesan','Decode another image':'Ekstrak gambar lain','Selected image':'Gambar yang dipilih','The image you upload will appear here.':'Gambar yang diunggah akan muncul di sini.','Wrong password?':'Kata sandi salah?','You can inspect the raw encrypted payload without a password. Only the matching password and successful authentication reveal the original plaintext.':'Anda dapat melihat payload terenkripsi tanpa kata sandi. Hanya kata sandi yang cocok dan autentikasi berhasil yang menampilkan teks asli.','Missing message?':'Pesan tidak ditemukan?','A screenshot, resize, color adjustment, or lossy compression may have changed the LSB data. Try the original downloaded PNG.':'Tangkapan layar, perubahan ukuran/warna, atau kompresi lossy dapat mengubah data LSB. Coba PNG unduhan asli.',
+    'The idea behind the tool':'Konsep di balik alat ini','Hidden is not the':'Tersembunyi bukan','same as encrypted.':'berarti terenkripsi.','PIXELCRYPT demonstrates two different concepts. They can complement each other, but they solve different problems.':'PIXELCRYPT menunjukkan dua konsep berbeda. Keduanya dapat saling melengkapi, tetapi memiliki fungsi yang berbeda.','Least Significant Bit':'Bit Paling Tidak Signifikan','Image pixels contain red, green, and blue color values. PIXELCRYPT changes the lowest bit of opaque RGB channels to store packet bits, while leaving alpha unchanged.':'Piksel gambar menyimpan nilai warna merah, hijau, dan biru. PIXELCRYPT mengubah bit terendah kanal RGB opak untuk menyimpan bit paket, tanpa mengubah alpha.','Encrypt before embedding':'Enkripsi sebelum penyisipan','AES-GCM, XChaCha20-Poly1305, and the CBC/CTR plus HMAC options protect message contents when configured correctly. The password is never stored in the image.':'AES-GCM, XChaCha20-Poly1305, serta pilihan CBC/CTR dengan HMAC melindungi isi pesan jika dikonfigurasi dengan benar. Kata sandi tidak disimpan di gambar.','Keep the PNG untouched':'Jangan ubah PNG','Lossy conversion, resizing, filters, and statistical analysis can expose or destroy simple LSB steganography. This is a learning tool, not a claim of perfect invisibility or absolute security.':'Konversi lossy, perubahan ukuran, filter, dan analisis statistik dapat membongkar atau merusak steganografi LSB sederhana. Ini alat pembelajaran, bukan jaminan tak terdeteksi atau aman mutlak.','Privacy notice':'Pemberitahuan privasi','PIXELCRYPT processes selected images, secret messages, and passwords locally in your browser. It does not upload your files, password, or message contents to an application backend.':'PIXELCRYPT memproses gambar, pesan rahasia, dan kata sandi secara lokal di browser. File, kata sandi, dan isi pesan tidak diunggah ke backend aplikasi.','The page and the optional XChaCha dependency may be downloaded from their hosting servers. Do not use a modified or untrusted copy of this HTML for highly sensitive information.':'Halaman dan dependensi XChaCha opsional dapat diunduh dari server hosting. Jangan gunakan salinan HTML yang dimodifikasi atau tidak tepercaya untuk informasi sangat sensitif.',
+    'A browser-based educational tool. Steganography does not guarantee that hidden data cannot be detected.':'Alat edukasi berbasis browser. Steganografi tidak menjamin data tersembunyi tidak dapat dideteksi.',
+    'PROCESS LOG':'LOG PROSES','LOCAL SESSION TRACE':'JEJAK SESI LOKAL','PROCESSED':'DIPROSES','LIVE SESSION':'SESI AKTIF','Clear log':'Hapus log','Waiting for a local process…':'Menunggu proses lokal…','NO BACKEND CONNECTION':'TANPA KONEKSI BACKEND','LOGS EXCLUDE MESSAGE CONTENT AND PASSWORDS':'LOG TIDAK MENYIMPAN ISI PESAN ATAU KATA SANDI',
+    'Image loaded. Enter a message and review the estimated capacity.':'Gambar dimuat. Masukkan pesan dan periksa perkiraan kapasitas.','Password strength is evaluated locally.':'Kekuatan kata sandi dinilai secara lokal.','Enter your password twice to reduce typing mistakes.':'Masukkan kata sandi dua kali untuk mengurangi kesalahan ketik.','Passwords match.':'Kata sandi cocok.','Confirm your password.':'Konfirmasikan kata sandi.','Passwords do not match yet.':'Kata sandi belum cocok.','Weak — use a longer, less predictable password.':'Lemah — gunakan kata sandi lebih panjang dan sulit ditebak.','Fair — consider adding length and variety.':'Cukup — tambahkan panjang dan variasi.','Stronger password pattern. Avoid reusing it elsewhere.':'Pola kata sandi lebih kuat. Hindari penggunaan ulang.',
+    'Image ready':'Gambar siap','Processing…':'Memproses…','Recommended':'Disarankan','RECOMMENDED':'DISARANKAN','Detected encrypted data: ':'Data terenkripsi terdeteksi: ','Enter the matching password to recover the message.':'Masukkan kata sandi yang cocok untuk memulihkan pesan.','A plaintext message was detected. It is hidden but not encrypted; checksum validation will run during extraction.':'Pesan teks biasa terdeteksi. Pesan disembunyikan tetapi tidak dienkripsi; checksum akan divalidasi saat ekstraksi.','Scanning the image header…':'Memindai header gambar…','This image is too small to contain a PIXELCRYPT header.':'Gambar ini terlalu kecil untuk memuat header PIXELCRYPT.','No valid PIXELCRYPT message was detected.':'Tidak ditemukan pesan PIXELCRYPT yang valid.','Encrypted data extracted without a password. Showing ciphertext only; enter the matching password to decrypt and authenticate.':'Data terenkripsi diekstrak tanpa kata sandi. Hanya ciphertext yang ditampilkan; masukkan kata sandi yang cocok untuk mendekripsi dan mengautentikasi.','Ciphertext preview ready. Original message remains encrypted.':'Pratinjau ciphertext siap. Pesan asli tetap terenkripsi.','Message recovered successfully. The text below is safe to copy as plain text.':'Pesan berhasil dipulihkan. Teks di bawah aman untuk disalin sebagai teks biasa.','Message copied to clipboard.':'Pesan disalin ke clipboard.','Select the message text and copy it manually.':'Pilih teks pesan dan salin secara manual.','Unable to recover a valid message.':'Tidak dapat memulihkan pesan yang valid.','Verification failed':'Verifikasi gagal','Authentication passed':'Autentikasi berhasil','CRC32 passed':'CRC32 berhasil','Header valid':'Header valid','MESSAGE FOUND':'PESAN DITEMUKAN','NO VALID MESSAGE':'TIDAK ADA PESAN VALID','Not validated':'Belum divalidasi','Ciphertext only · not decrypted':'Ciphertext saja · belum didekripsi','Encrypted payload preview':'Pratinjau payload terenkripsi','Decryption is verified.':'Dekripsi telah diverifikasi.',
+    'This image uses XChaCha20-Poly1305, but the required dependency is unavailable. No fallback was attempted.':'Gambar ini menggunakan XChaCha20-Poly1305, tetapi dependensi yang diperlukan tidak tersedia. Tidak ada metode pengganti yang digunakan.',
+    'Extract & decrypt':'Ekstrak & dekripsi','Extract ciphertext':'Ekstrak ciphertext','Processing…':'Memproses…','Scanning the image header…':'Memindai header gambar…',
+    'File exceeds the 20 MB limit. Please choose a smaller image.':'File melebihi batas 20 MB. Pilih gambar yang lebih kecil.','Please choose a PNG, JPG, or WebP image.':'Pilih gambar PNG, JPG, atau WebP.','The file could not be decoded as an image. It may be damaged or unsupported.':'File tidak dapat dibaca sebagai gambar. File mungkin rusak atau tidak didukung.','Your browser could not create an image-processing canvas.':'Browser tidak dapat membuat kanvas pemrosesan gambar.','Internal pixel round-trip validation failed.':'Validasi putaran-balik piksel internal gagal.','The browser could not produce a PNG file.':'Browser tidak dapat menghasilkan file PNG.','Choose an image and enter a message to begin.':'Pilih gambar dan masukkan pesan untuk memulai.',
+    "Authenticated encryption through the browser's Web Crypto API. Detects tampering and wrong passwords.":'Enkripsi terautentikasi melalui Web Crypto API browser. Mendeteksi manipulasi dan kata sandi yang salah.','Authenticated encryption with a 24-byte nonce, provided by the pinned libsodium.js browser dependency.':'Enkripsi terautentikasi dengan nonce 24 byte melalui dependensi libsodium.js yang versinya dipatok.','AES-CBC encrypts the data, while a separate HMAC key verifies integrity before decryption.':'AES-CBC mengenkripsi data, sedangkan kunci HMAC terpisah memverifikasi integritas sebelum dekripsi.','AES-CTR encrypts the data, while a separate HMAC key verifies integrity before decryption.':'AES-CTR mengenkripsi data, sedangkan kunci HMAC terpisah memverifikasi integritas sebelum dekripsi.',
+    'Weak — use a longer, less predictable password.':'Lemah — gunakan kata sandi lebih panjang dan sulit ditebak.','Fair — consider adding length and variety.':'Cukup — pertimbangkan menambah panjang dan variasi.','Stronger password pattern. Avoid reusing it elsewhere.':'Pola kata sandi lebih kuat. Hindari penggunaan ulang.','The plaintext packet is invalid or corrupted.':'Paket teks biasa tidak valid atau rusak.','Plaintext extracted and CRC32 checksum matched. Note: this message was not encrypted.':'Teks biasa diekstrak dan checksum CRC32 cocok. Catatan: pesan ini tidak dienkripsi.','Checksum mismatch. The image or embedded data may have been corrupted.':'Checksum tidak cocok. Gambar atau data yang disisipkan mungkin rusak.','Image exceeds the 16,000,000-pixel limit. Choose a smaller-resolution image.':'Gambar melebihi batas 16.000.000 piksel. Pilih resolusi lebih kecil.',
+    'Image ready':'Gambar siap','Waiting for image':'Menunggu gambar','No file selected':'Belum ada file dipilih','Choose an image':'Pilih gambar','Browse image':'Telusuri gambar','Remove image':'Hapus gambar','Reset':'Atur ulang','Clear':'Bersihkan','Hide password':'Sembunyikan kata sandi','Show password':'Tampilkan kata sandi','Source image':'Gambar sumber','Selected source image thumbnail':'Thumbnail gambar sumber yang dipilih','Selected stego image thumbnail':'Thumbnail gambar stego yang dipilih','Generated stego PNG preview':'Pratinjau PNG stego hasil pembuatan',
+    'Scanning the image header…':'Memindai header gambar…','Message embedded successfully. Download your PNG.':'Pesan berhasil disisipkan. Unduh PNG Anda.','The browser could not create the output canvas.':'Browser tidak dapat membuat kanvas keluaran.','Could not load the image.':'Tidak dapat memuat gambar.','Encoding failed. Please try a different image or method.':'Penyisipan gagal. Coba gambar atau metode lain.','Unable to recover a valid message.':'Tidak dapat memulihkan pesan yang valid.','The image or embedded data may have been corrupted.':'Gambar atau data yang disisipkan mungkin rusak.','Decryption failed. The password may be incorrect, or the embedded data may be corrupted.':'Dekripsi gagal. Kata sandi mungkin salah atau data yang disisipkan rusak.','Web Crypto is unavailable. Open the site over HTTPS in a modern browser.':'Web Crypto tidak tersedia. Buka situs melalui HTTPS dengan browser modern.','Enter the decryption password to continue.':'Masukkan kata sandi dekripsi untuk melanjutkan.','Deriving key and verifying the message locally…':'Membuat kunci dan memverifikasi pesan secara lokal…','Checking payload checksum…':'Memeriksa checksum payload…','Message embedded. Packet integrity was checked in memory. Download the PNG to preserve its LSB data.':'Pesan disisipkan. Integritas paket telah diperiksa di memori. Unduh PNG untuk mempertahankan data LSB.','Message embedded successfully. Download your PNG.':'Pesan berhasil disisipkan. Unduh PNG Anda.','Encoding failed. Check the status message.':'Penyisipan gagal. Periksa pesan status.','The plaintext packet is invalid or corrupted.':'Paket teks biasa tidak valid atau rusak.','Plaintext extracted and CRC32 checksum matched. Note: this message was not encrypted.':'Teks biasa diekstrak dan checksum CRC32 cocok. Catatan: pesan ini tidak dienkripsi.','Upload an image to scan its hidden-data header.':'Unggah gambar untuk memindai header data tersembunyi.'
+  };
+  const reverse = Object.fromEntries(Object.entries(translations).map(([en,id]) => [id,en]));
+  function preserveWhitespace(original, replacement) {
+    const lead = original.match(/^\s*/)?.[0] || '';
+    const trail = original.match(/\s*$/)?.[0] || '';
+    return lead + replacement + trail;
+  }
+  function translateText(input, lang=currentLanguage) {
+    const trimmed = String(input).trim();
+    if (!trimmed) return input;
+    if (lang === 'id') {
+      if (Object.prototype.hasOwnProperty.call(translations, trimmed)) return preserveWhitespace(input, translations[trimmed]);
+      // Translate common interpolated status messages without ever touching hidden content.
+      const found = trimmed.match(/^Detected encrypted data: (.+)\. Enter the matching password to recover the message\.$/);
+      if (found) return preserveWhitespace(input, `Data terenkripsi terdeteksi: ${found[1]}. Masukkan kata sandi yang cocok untuk memulihkan pesan.`);
+      const err = trimmed.match(/^File exceeds the (.+) limit\. Please choose a smaller image\.$/);
+      if (err) return preserveWhitespace(input, `File melebihi batas ${err[1]}. Pilih gambar yang lebih kecil.`);
+      const dim = trimmed.match(/^Image exceeds the (.+)-pixel limit\. Choose a smaller-resolution image\.$/);
+      if (dim) return preserveWhitespace(input, `Gambar melebihi batas ${dim[1]} piksel. Pilih gambar dengan resolusi lebih rendah.`);
+      const cipher = trimmed.match(/^Raw ciphertext for (.+) is shown as Base64\. This is not the original message and cannot be read as plaintext without the matching password\.$/);
+      if (cipher) return preserveWhitespace(input, `Ciphertext mentah untuk ${cipher[1]} ditampilkan sebagai Base64. Ini bukan pesan asli dan tidak dapat dibaca sebagai teks biasa tanpa kata sandi yang cocok.`);
+      const authenticated = trimmed.match(/^(.+) authenticated successfully\. Plaintext was only shown after verification\.$/);
+      if (authenticated) return preserveWhitespace(input, `Autentikasi ${authenticated[1]} berhasil. Teks asli hanya ditampilkan setelah verifikasi.`);
+      return input;
+    }
+    if (Object.prototype.hasOwnProperty.call(reverse, trimmed)) return preserveWhitespace(input, reverse[trimmed]);
+    const foundId = trimmed.match(/^Data terenkripsi terdeteksi: (.+)\. Masukkan kata sandi yang cocok untuk memulihkan pesan\.$/);
+    if(foundId) return preserveWhitespace(input, `Detected encrypted data: ${foundId[1]}. Enter the matching password to recover the message.`);
+    const fileId = trimmed.match(/^File melebihi batas (.+)\. Pilih gambar yang lebih kecil\.$/);
+    if(fileId) return preserveWhitespace(input, `File exceeds the ${fileId[1]} limit. Please choose a smaller image.`);
+    const dimId = trimmed.match(/^Gambar melebihi batas (.+) piksel\. Pilih gambar dengan resolusi lebih rendah\.$/);
+    if(dimId) return preserveWhitespace(input, `Image exceeds the ${dimId[1]}-pixel limit. Choose a smaller-resolution image.`);
+    const cipherId = trimmed.match(/^Ciphertext mentah untuk (.+) ditampilkan sebagai Base64\. Ini bukan pesan asli dan tidak dapat dibaca sebagai teks biasa tanpa kata sandi yang cocok\.$/);
+    if(cipherId) return preserveWhitespace(input, `Raw ciphertext for ${cipherId[1]} is shown as Base64. This is not the original message and cannot be read as plaintext without the matching password.`);
+    const authId = trimmed.match(/^Autentikasi (.+) berhasil\. Teks asli hanya ditampilkan setelah verifikasi\.$/);
+    if(authId) return preserveWhitespace(input, `${authId[1]} authenticated successfully. Plaintext was only shown after verification.`);
+    return input;
+  }
+  function translateTree(root=document.body) {
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    for(const node of nodes){
+      const parent=node.parentElement;
+      if(!parent || parent.closest('script,style,textarea,input')) continue;
+      const updated=translateText(node.nodeValue,currentLanguage);
+      if(updated!==node.nodeValue) node.nodeValue=updated;
+    }
+    // Translate useful attributes separately, without changing user-entered values.
+    document.documentElement.lang=currentLanguage;
+    const attrPairs={
+      'aria-label':{
+        'Main navigation':'Navigasi utama','Choose language':'Pilih bahasa','PIXELCRYPT home':'Beranda PIXELCRYPT','Choose or drop a source image':'Pilih atau lepaskan gambar sumber','Choose or drop a stego image':'Pilih atau lepaskan gambar stego','Steganography workspace':'Ruang kerja steganografi','Recovered message':'Pesan hasil pemulihan'
+      },
+      'placeholder':{
+        'Type the message you want to hide inside your image...':'Ketik pesan yang ingin disembunyikan di dalam gambar...','Create a strong password':'Buat kata sandi yang kuat','Type the same password again':'Ketik ulang kata sandi yang sama','Enter the same password used for encoding':'Masukkan kata sandi yang sama dengan saat penyisipan'
+      }
+    };
+    for(const [attr,map] of Object.entries(attrPairs)) for(const el of document.querySelectorAll(`[${attr}]`)){
+      const original=el.getAttribute(attr);const v=currentLanguage==='id'?(map[original]||original):(Object.fromEntries(Object.entries(map).map(([a,b])=>[b,a]))[original]||original);el.setAttribute(attr,v);
+    }
+    const title=document.getElementById('decodedTitle');
+    if(title && title.dataset.localeCipher==='true' && currentLanguage==='id') title.textContent='Pratinjau payload terenkripsi';
+    else if(title && title.dataset.localeCipher==='true' && currentLanguage==='en') title.textContent='Encrypted payload preview';
+  }
+  function log(channel,message,kind='info') {
+    const line=document.createElement('div');line.className='terminal-line';
+    const now=new Date();const time=[now.getHours(),now.getMinutes(),now.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    const tm=document.createElement('span');tm.className='terminal-time';tm.textContent=time;
+    const tag=document.createElement('span');tag.className='terminal-tag '+(kind||'info');tag.textContent='['+channel+']';
+    const msg=document.createElement('span');msg.className='terminal-message';msg.dataset.en=message;msg.textContent=translateText(message,currentLanguage);
+    line.append(tm,tag,msg);terminalLines.appendChild(line);
+    while(terminalLines.children.length>42)terminalLines.firstElementChild.remove();
+    const screen=terminalLines.parentElement;screen.scrollTop=screen.scrollHeight;
+  }
+  window.pixelCryptTerminalLog=log;
+  window.pixelCryptT=translateText;
+  languageSelect.value='en';languageSelect.addEventListener('change',()=>{
+    currentLanguage=languageSelect.value==='id'?'id':'en';
+    translateTree();
+    const heroHeading=document.querySelector('.hero h1');
+    if(heroHeading)heroHeading.innerHTML=currentLanguage==='id'?'Sembunyikan<br>pesan <span class="red">rahasia.</span>':'Hide in<br>plain <span class="red">sight.</span>';
+    // Re-translate prior log lines from their stable English source stored in data-en.
+    for(const el of terminalLines.querySelectorAll('.terminal-message'))if(el.dataset.en)el.textContent=translateText(el.dataset.en,currentLanguage);
+    document.documentElement.lang=currentLanguage;
+  });
+  document.getElementById('clearTerminal').addEventListener('click',()=>{terminalLines.replaceChildren();log('SYSTEM','Process log cleared.','info');});
+  const observer=new MutationObserver(records=>{
+    if(currentLanguage!=='id') return;
+    for(const r of records){
+      if(r.type==='characterData'){
+        const n=r.target;if(n.parentElement?.closest('script,style,textarea,input'))continue;
+        const newer=translateText(n.nodeValue,'id');if(newer!==n.nodeValue)n.nodeValue=newer;
+      } else for(const added of r.addedNodes){
+        if(added.nodeType===Node.TEXT_NODE){if(!added.parentElement?.closest('script,style,textarea,input')){const t=translateText(added.nodeValue,'id');if(t!==added.nodeValue)added.nodeValue=t;}}
+        else if(added.nodeType===Node.ELEMENT_NODE && !added.closest('script,style,textarea,input'))translateTree(added);
+      }
+    }
+  });
+  observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+  translateTree();
+  const initialHeroHeading=document.querySelector('.hero h1');
+  if(initialHeroHeading)initialHeroHeading.innerHTML='Hide in<br>plain <span class="red">sight.</span>';
+  log('SYSTEM','PIXELCRYPT UI initialized. Processing stays in this browser.','success');
+  log('SYSTEM','No message text or passwords are recorded in this log.','info');
+})();
+</script>
+</body>
+</html>
